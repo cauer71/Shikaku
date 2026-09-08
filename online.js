@@ -59,6 +59,32 @@ const AUSWAERTS = 'https://shikaku.auer.page';
 const HOST = typeof location !== 'undefined' && location.hostname.endsWith('github.io')
   ? AUSWAERTS : '';
 
+/**
+ * Liegt die Seite an einer Adresse, an der eine Schnittstelle überhaupt
+ * antworten kann?
+ *
+ * Der Ruf geht relativ (siehe oben), und unter `file://` wird daraus
+ * `file:///api/welt`. Das ist kein Fehlschlag, mit dem diese Datei umgehen
+ * müsste, sondern ein Ruf, der von vornherein nicht gemeint war: es gibt dort
+ * keinen Server, an den er gerichtet wäre. Chromium schreibt dafür zwei
+ * CORS-Fehler in die Konsole ("Cross origin requests are only supported for
+ * protocol schemes: …"), und die sehen aus wie ein Fehler im Spiel, obwohl
+ * `ruf()` sie ohnehin verschluckt und alles weiterläuft.
+ *
+ * Der Fall ist nicht ausgedacht: die Einzeldatei-Fassung (siehe
+ * tools/build-einzeldatei.mjs) ist genau dafür gebaut, per Doppelklick
+ * geöffnet zu werden, und die Modulfassung lässt sich ebenso aus dem
+ * Dateisystem starten. Gemessen in tools/probe-einzeldatei.mjs.
+ *
+ * Fehlt `location` ganz, wird durchgelassen: das ist Node, dort ist `fetch`
+ * in den Tests absichtlich gestellt, und eine Prüfung, die die Tests
+ * stillschweigend abschaltet, wäre schlimmer als die Konsolenmeldung.
+ */
+function amNetz() {
+  if (typeof location === 'undefined') return true;
+  return location.protocol === 'http:' || location.protocol === 'https:';
+}
+
 const SPEICHER = 'sk.welt.v1';
 
 /** So lange gelten gelesene Weltwerte als frisch (5 Minuten). */
@@ -344,7 +370,7 @@ export function uebernehmen(zettelchen, stand) {
  * und der Enddialog wartete darauf.
  */
 async function ruf(pfad, koerper = null) {
-  if (!erlaubt) return null;
+  if (!erlaubt || !amNetz()) return null;
   const stop = new AbortController();
   const uhr = setTimeout(() => stop.abort(), GEDULD);
   try {

@@ -301,7 +301,33 @@ niemand gedacht hat.
 - **Echte Nebenläufigkeit** (zwei gleichzeitige `POST`) ist nicht gemessen,
   sondern nur aus dem SQL abgeleitet. Der Vergleich steht im `WHERE` derselben
   Anweisung — dass das genügt, ist eine Zusage von SQLite, keine Beobachtung
-  aus einem Lasttest.
-- **Die Auswärtsadresse in `online.js`** steht auf `https://shikaku.auer.page`
-  und muss zur wirklichen Domain passen, sobald das Spiel auch auf GitHub Pages
-  liegt.
+  aus einem Lasttest. Der UPSERT selbst ist dagegen gegen die echte Datenbank
+  belegt: eine langsamere Zeit desselben Kürzels lässt Zeit, Fehler und Tipps
+  unberührt.
+- **Die Oberfläche ist nicht gegen die veröffentlichte Seite geprüft**,
+  sondern nur gegen `dist/` hinter einem örtlichen Server. Der Grund ist die
+  Umgebung: ein echter Browser kommt von hier aus nicht an `shikaku.auer.page`
+  (der Proxy bricht die Verbindung ab), `curl` schon. Die Schnittstelle ist
+  darum live geprüft, das Brett nicht. Genau dafür gibt es bei
+  `zehner-paare` einen eigenen Workflow, der auf einem GitHub-Läufer läuft —
+  der wäre hier der nächste Schritt.
+
+## Was dabei live geprüft ist
+
+Nach dem Ausliefern an der echten Schnittstelle nachgemessen, nicht abgeleitet:
+
+- Alle Dateien werden ausgeliefert, `worker.js`, `package.json`, `README.md`
+  und die Testdateien dagegen **nicht** (404) — die Regel in
+  `build-dist.mjs` greift also.
+- Ein unbekannter Pfad bekommt die eigene 404-Seite, nicht `index.html`
+  mit Status 200. Das ist der Grund für `not_found_handling: "404-page"`.
+- `GET /api/welt` antwortet aus D1.
+- Eine gewonnene Partie **ohne** Kürzel zählt nur mit und schreibt keine
+  Zeile. Mit Kürzel entsteht eine, und eine langsamere Zeit desselben
+  Kürzels ändert danach nichts.
+- Die Prüfungen weisen ab, was sie abweisen sollen: zu schnell für die Stufe,
+  erfundene Stufe, Sekunden als Zeichenkette, vierstelliges Kürzel. Ein
+  `__proto__` im Körper läuft ins Leere.
+
+Die Testdaten sind hinterher gelöscht und die Zähler zurückgesetzt — die
+Weltzahlen fangen bei null an.

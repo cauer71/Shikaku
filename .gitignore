@@ -28,3 +28,9 @@ Thumbs.db
 .idea/
 *.sw?
 *.local
+
+# Die Einzeldatei-Fassung ist ein Erzeugnis, kein Quelltext: sie entsteht mit
+# "npm run einzeldatei" aus index.html, den Modulen und den Stilblaettern.
+# Im Verlauf waere sie 374 KB, die sich bei jeder Aenderung komplett
+# unterscheiden.
+shikaku.html

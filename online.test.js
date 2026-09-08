@@ -476,3 +476,41 @@ test('ein abgebrochener und ein synchron werfender Ruf sind auch nur null', asyn
   globalThis.fetch = async () => new Response(null, { status: 204 });
   assert.equal(await welt.lesen(), null);
 });
+
+/*
+ * Unter file:// wird gar nicht gerufen.
+ *
+ * Der Ruf geht relativ, aus '/api/welt' wird dort also 'file:///api/welt' --
+ * eine Adresse, an der nichts antwortet und an der Chromium zwei CORS-Fehler
+ * in die Konsole schreibt. Verschluckt wurden sie immer schon; sinnlos war der
+ * Ruf trotzdem. Gefunden mit der Einzeldatei-Fassung, die genau dafuer gebaut
+ * ist, per Doppelklick geoeffnet zu werden (tools/probe-einzeldatei.mjs).
+ *
+ * `location` wird hier gestellt und danach wieder entfernt: fehlt es ganz,
+ * laesst amNetz() absichtlich durch -- das ist der Zustand aller anderen Tests
+ * in dieser Datei, und der darf sich durch diesen nicht aendern.
+ */
+test('unter file:// wird die Schnittstelle nicht gerufen', async () => {
+  const vorher = globalThis.location;
+  let gerufen = 0;
+  globalThis.fetch = async () => { gerufen++; return new Response('{}', { status: 200 }); };
+  welt.schalten(true);
+
+  try {
+    globalThis.location = { protocol: 'file:', hostname: '', href: 'file:///shikaku.html' };
+    assert.equal(await welt.lesen(), null, 'lesen() darf unter file:// nichts liefern');
+    assert.equal((await welt.partieBeendet({ stufe: 'mittel', sekunden: 143 })).gezaehlt, false);
+    assert.equal(gerufen, 0, 'es darf kein fetch stattgefunden haben');
+
+    // Zur Gegenprobe: ueber http wird sehr wohl gerufen. Sonst haette die
+    // Pruefung oben auch bestanden, wenn amNetz() einfach immer falsch waere.
+    globalThis.location = { protocol: 'https:', hostname: 'shikaku.auer.page', href: 'https://shikaku.auer.page/' };
+    globalThis.fetch = async () => { gerufen++; return new Response(JSON.stringify({
+      spiele: 1, siege: 1, rekorde: {}, beste: {} }), { status: 200 }); };
+    assert.notEqual(await welt.lesen(), null, 'ueber https muss gelesen werden');
+    assert.equal(gerufen, 1, 'genau ein Ruf ueber https');
+  } finally {
+    if (vorher === undefined) delete globalThis.location;
+    else globalThis.location = vorher;
+  }
+});

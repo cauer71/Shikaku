@@ -7,6 +7,8 @@
     "check:i18n": "node tools/check-i18n.mjs",
     "check:dom": "node tools/check-dom.mjs",
     "check": "npm run check:i18n && npm run check:dom",
+    "einzeldatei": "node tools/build-einzeldatei.mjs",
+    "check:einzeldatei": "npm run einzeldatei && node tools/probe-einzeldatei.mjs",
     "deploy": "npm run build && npx wrangler@latest deploy"
   },
   "license": "MIT"

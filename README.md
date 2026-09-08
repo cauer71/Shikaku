@@ -17,9 +17,26 @@ bleibt, entscheiden die Nachbarn.
 
 ## Spielen
 
+**https://shikaku.auer.page** — dort läuft es, samt gemeinsamer Rangliste.
+Die Adresse des Workers selbst ist
+`https://shikaku.christian-auer-71.workers.dev`; sie tut dasselbe und ist der
+Weg, wenn man den eigenen Namen einmal umhängt.
+
+Örtlich:
+
 ```
 npm run build && cd dist && python3 -m http.server 4173
 ```
+
+Oder als **einzelne Datei**, ohne Server:
+
+```
+npm run einzeldatei     # legt shikaku.html an, ~374 KB
+```
+
+Die lässt sich per Doppelklick öffnen, verschicken oder auf einen Stick legen —
+das ganze Spiel steckt darin. Nur die Weltrangliste fehlt (die braucht den
+Worker); die eigenen Bestzeiten laufen weiter.
 
 Jedes Rätsel wird neu erzeugt und ist **eindeutig lösbar** — das ist geprüft,
 nicht gehofft: der Erzeuger lässt kein Rätsel heraus, für das der Löser mehr
@@ -78,16 +95,16 @@ npm run deploy              # bauen und veröffentlichen
 Es wird nichts installiert: die Skripte rufen `npx wrangler@latest` auf. Das
 Spiel selbst bleibt ohne Abhängigkeiten.
 
-Die Domain hängt man im Dashboard an den Worker (Settings → Domains & Routes →
-Add → Custom domain). Sie steht bewusst nicht in `wrangler.jsonc`: dann kann man
-sie ändern, ohne den Code anzufassen.
+Die Domain hängt am Worker und steht bewusst **nicht** in `wrangler.jsonc`:
+so lässt sie sich ändern, ohne den Code anzufassen. `shikaku.auer.page` ist
+angelegt (Workers → shikaku → Settings → Domains & Routes); der DNS-Eintrag
+entsteht dabei von selbst, weil `auer.page` im selben Konto liegt.
 
-> **Ein Wert will noch entschieden werden.** `online.js` kennt eine
-> Auswärtsadresse für den Fall, dass das Spiel auf GitHub Pages liegt — dort
-> gibt es keine Schnittstelle daneben, der Ruf muss also über Kreuz gehen. Sie
-> steht auf `https://shikaku.auer.page`, gebildet nach dem Muster von
-> `10.auer.page` bei Zehner-Paare. Wer die eigene Domain anders nennt, ändert
-> die eine Konstante `AUSWAERTS` in `online.js`.
+Eine Stelle nennt die Adresse doch, und sie muss mitwandern: `AUSWAERTS` in
+`online.js`. Das ist der Fall „das Spiel liegt auf GitHub Pages" — dort steht
+keine Schnittstelle daneben, der Ruf muss also über Kreuz gehen, und der Worker
+antwortet dafür mit offenem CORS. Solange das Spiel nur unter seiner eigenen
+Domain läuft, wird die Konstante nie benutzt.
 
 ### Was ausgeliefert wird
 
@@ -282,15 +299,21 @@ einziger Netzruf" verspricht, hätte genau das Gegenteil getan.
 ## Entwickeln
 
 ```bash
-npm test              # 199 Tests, node --test, ohne Netz
-npm run check:i18n    # jeden Textschlüssel gegen die Wörterbücher
-npm run check:dom     # jede Kennung aus dem JS gegen index.html
-npm run build         # dist/ zusammenstellen
+npm test                   # 200 Tests, node --test, ohne Netz
+npm run check              # Textschlüssel und DOM-Kennungen
+npm run build              # dist/ zusammenstellen
+npm run einzeldatei        # shikaku.html zusammenlegen
+npm run check:einzeldatei  # und darin ein Rätsel durchspielen
 ```
 
 `check:dom` gibt es, weil ein Tippfehler in einer Kennung ein stiller
 `null`-Zugriff ist: `index.html` und `app.js`/`brett.js` sind über Kennungen
 verbunden, und kein Test bemerkt eine, die nicht mehr passt.
+
+`check:einzeldatei` spielt in der zusammengelegten Datei wirklich ein Rätsel
+durch, statt nur zu prüfen, ob sie lädt. Das Zusammenlegen schneidet `import`
+und `export` mit einem regulären Ausdruck heraus — eine Funktion, die dadurch
+ins Leere zeigt, fällt erst auf, wenn sie gerufen wird.
 
 Der Aufbau steht in [ENTWICKLUNG.md](ENTWICKLUNG.md) — Modulschnitt, wie der
 Löser arbeitet, warum der Erzeuger so und nicht anders sucht, und die
@@ -320,7 +343,7 @@ papier.css            Skin
 m3.css m3-farben.css  Skin
 sw.js                 Offline-Speicher
 migrations/           D1-Schema
-tools/                dist/ bauen, Icons, Manifeste, Prüfwerkzeuge
+tools/                dist/ und shikaku.html bauen, Icons, Manifeste, Prüfwerkzeuge
 *.test.js             Tests zu jedem Modul
 ```
 
