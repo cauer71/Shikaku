@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Das Zeichen des Spiels ist kein Symbol FUER ein Raetsel, sondern eines.
+
+  Was hier steht, ist eine vollstaendige, gueltige Shikaku-Loesung auf 4x4:
+  vier Rechtecke, jedes mit genau einer Zahl, und jede Zahl ist die Flaeche
+  ihres Rechtecks. 6 + 4 + 4 + 2 = 16 = 4 * 4, restlos zerlegt.
+
+      +-------+-------+
+      |       |       |
+      |   6   |   4   |     6 = 2 breit x 3 hoch
+      |       |       |     4 = 2 x 2  (oben rechts)
+      |       +-------+     4 = 2 x 2  (unten rechts)
+      |       |       |     2 = 2 x 1  (unten links)
+      +-------+   4   |
+      |   2   |       |
+      +-------+-------+
+
+  Die Farben sind die von De Stijl und dieselben, die mondrian.css den
+  fertigen Rechtecken gibt: Zinnoberrot, Kobaltblau, Chromgelb, Grauweiss,
+  dazu Schwarz fuer die Linien. Das ist keine Anleihe bei einem Maler,
+  sondern derselbe Gegenstand: Shikaku IST eine Flaechenteilung in Rechtecke,
+  und genau die hat Mondrian gemalt.
+
+  Drei Entscheidungen, die man sonst fuer Zufall haelt:
+
+  1. Randlos und ohne runde Ecken. Ein Zeichen mit weissem Rand und weichen
+     Ecken haette bei 32 Pixeln kaum noch Bild - hier reicht die Farbe bis an
+     die Kante, und die schwarzen Linien bleiben auch dann noch drei Punkte
+     breit. Die runde Form macht das Betriebssystem selbst; fuer den Fall,
+     dass es rundherum schneidet, gibt es die maskable-Fassungen mit Luft am
+     Rand (tools/make-icons.mjs).
+  2. Die Zahlen sitzen in der MITTE ihres Rechtecks und nicht, wie im Spiel,
+     in einer einzelnen Zelle. Im Spiel ist die Lage der Zahl die halbe
+     Aufgabe; hier zaehlt nur, dass bei 32 Pixeln ueberhaupt noch eine Ziffer
+     zu erkennen ist, und eine Ziffer in einer 8-Pixel-Zelle ist keine mehr.
+  3. Die feinen Zellenlinien liegen UNTER den Ziffern. Sie zeigen das Raster,
+     aus dem die Flaechen bestehen - ohne sie waeren es nur vier bunte
+     Kaesten. Wo eine Ziffer sie kreuzt, deckt die Ziffer sie zu; das ist
+     gewollt und billiger als vier Beschneidungspfade.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512"
+     role="img" aria-label="Shikaku">
+  <title>Shikaku</title>
+
+  <!-- Die vier Flaechen. Zellkante 128, also 4x4 Zellen auf 512. -->
+  <rect x="0"   y="0"   width="256" height="384" fill="#d5202a"/>
+  <rect x="256" y="0"   width="256" height="256" fill="#10429a"/>
+  <rect x="256" y="256" width="256" height="256" fill="#f4c300"/>
+  <rect x="0"   y="384" width="256" height="128" fill="#eeece4"/>
+
+  <!-- Das Raster, fein: hell auf den dunklen Flaechen ... -->
+  <g stroke="#ffffff" stroke-opacity=".26" stroke-width="5">
+    <path d="M128 0V384M0 128H256M0 256H256"/>
+    <path d="M384 0V256M256 128H512"/>
+  </g>
+  <!-- ... und dunkel auf den hellen. -->
+  <g stroke="#16161a" stroke-opacity=".20" stroke-width="5">
+    <path d="M384 256V512M256 384H512"/>
+    <path d="M128 384V512"/>
+  </g>
+
+  <!-- Die Kanten zwischen den Rechtecken und der Rahmen: dick und schwarz.
+       Das ist die Linie, die bei De Stijl die Arbeit macht.
+
+       Der Rahmen ist schmaler als die Trennlinien (22 gegen 26). Gleich dick
+       sah er aus wie eine fuenfte Flaeche und nahm den Ziffern in den
+       Randfeldern den Platz weg - vor allem der 2 unten links, die in einem
+       nur 128 hohen Streifen sitzt. -->
+  <g stroke="#16161a" fill="none">
+    <path d="M256 0V512M0 384H256M256 256H512" stroke-width="26"/>
+    <rect x="11" y="11" width="490" height="490" stroke-width="22"/>
+  </g>
+
+  <!-- Die Zahlen. Sehr fett und geometrisch; die Schrift kommt aus dem
+       System, denn eine mitgelieferte Datei waere fuer vier Ziffern ein
+       halbes Megabyte.
+
+       Jede Ziffer sitzt in der Mitte der FREIEN Flaeche ihres Rechtecks, also
+       nach Abzug von Rahmen und Trennlinien - nicht in der geometrischen
+       Mitte. Der Unterschied sind bis zu dreizehn Punkte, und genau die
+       fehlten der 2, die sonst auf dem unteren Rahmen sass.
+
+       Die Strichbreite (stroke in der Farbe der Fuellung, paint-order
+       "stroke") ist ein kuenstliches Fettmachen. Sie steht da, weil die
+       System-Schriften bei 700 aufhoeren und bei 32 Pixeln aus einer 700er
+       Ziffer ein Faden wird - die weisse 6 auf Rot war dort kaum noch da.
+       Eine echte schwarze Schnittfassung mitzuliefern waere die saubere
+       Loesung und kostet eine Schriftdatei fuer vier Ziffern; das steht in
+       keinem Verhaeltnis. -->
+  <g font-family="'Helvetica Neue', Helvetica, Arial, 'Liberation Sans', system-ui, sans-serif"
+     font-weight="700" text-anchor="middle"
+     paint-order="stroke" stroke-width="8" stroke-linejoin="round">
+    <text x="132" y="256" font-size="170" fill="#ffffff" stroke="#ffffff">6</text>
+    <text x="379" y="185" font-size="150" fill="#ffffff" stroke="#ffffff">4</text>
+    <text x="379" y="432" font-size="150" fill="#16161a" stroke="#16161a">4</text>
+    <text x="132" y="477" font-size="96" fill="#16161a" stroke="#16161a">2</text>
+  </g>
+</svg>

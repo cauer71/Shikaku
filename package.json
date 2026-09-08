@@ -1,0 +1,13 @@
+{
+  "name": "shikaku", "version": "1.0.0", "private": true, "type": "module",
+  "scripts": {
+    "test": "node --test shikaku.test.js loeser.test.js erzeuger.test.js i18n.test.js online.test.js worker.test.js",
+    "build": "node tools/build-dist.mjs",
+    "start": "python3 -m http.server 4173",
+    "check:i18n": "node tools/check-i18n.mjs",
+    "check:dom": "node tools/check-dom.mjs",
+    "check": "npm run check:i18n && npm run check:dom",
+    "deploy": "npm run build && npx wrangler@latest deploy"
+  },
+  "license": "MIT"
+}

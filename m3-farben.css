@@ -1,0 +1,187 @@
+/* =========================================================================
+   Shikaku – Material-3-Rollenfarben
+
+   Quellton #2F5FD8 ("Kobalt"), Schema in der Art von Vibrant, Kontraststufe 0.
+   Der Ton ist mit Absicht das Kobaltblau, das im Mondrian-Stil eines der drei
+   Grundfarbfelder ist: dasselbe Spiel, dieselbe Familie, andere Sprache.
+   Er ist auch mit Absicht NICHT das Orange von zehner-paare – zwei Spiele
+   nebeneinander sollen sich am Farbton auseinanderhalten lassen.
+
+   Format und Rollennamen wie in zehner-paare/m3-colors.css, damit m3.css
+   dort und hier gleich aussieht. Erzeugt wurde die Tabelle einmal aus dem
+   Quellton (Ton = CIE-Helligkeit L*, Buntheit in CIELCh, in den sRGB-Raum
+   geklemmt) und wird hier von Hand gepflegt – ein Werkzeug dafür wäre die
+   erste Abhängigkeit des Projekts gewesen, und drei Zahlen im Jahr ändert
+   man schneller mit der Hand.
+
+   Nebentöne: der zweite Ton dreht 40 Grad weiter, der dritte 100 – bei
+   gleicher Drehung wie in der Vorlage fielen "primary-container" und
+   "secondary-container" auf Ton 90 auf denselben Wert zusammen, und die
+   Rechtecke des Bretts holen ihre fünf Farben genau aus dieser Reihe.
+
+   Jeder Wert steht zuerst auf blankem :root (hell), wird im Media-Block nur
+   unter :root:not([data-theme="light"]) überschrieben und noch einmal unter
+   :root[data-theme="dark"] – so gewinnt eine bewusste Wahl in beide
+   Richtungen und "auto" folgt dem System.
+   ========================================================================= */
+
+:root {
+  --md-sys-color-background: #f9f9ff;
+  --md-sys-color-error: #bf0420;
+  --md-sys-color-error-container: #ffdad5;
+  --md-sys-color-inverse-on-surface: #f0f0f8;
+  --md-sys-color-inverse-primary: #c0c1fe;
+  --md-sys-color-inverse-surface: #303036;
+  --md-sys-color-on-background: #1b1b20;
+  --md-sys-color-on-error: #ffffff;
+  --md-sys-color-on-error-container: #3d0600;
+  --md-sys-color-on-primary: #ffffff;
+  --md-sys-color-on-primary-container: #001849;
+  --md-sys-color-on-primary-fixed: #001849;
+  --md-sys-color-on-primary-fixed-variant: #0040a2;
+  --md-sys-color-on-secondary: #ffffff;
+  --md-sys-color-on-secondary-container: #2e102a;
+  --md-sys-color-on-secondary-fixed: #2e102a;
+  --md-sys-color-on-secondary-fixed-variant: #5d3c57;
+  --md-sys-color-on-surface: #1b1b20;
+  --md-sys-color-on-surface-variant: #454556;
+  --md-sys-color-on-tertiary: #ffffff;
+  --md-sys-color-on-tertiary-container: #3d0600;
+  --md-sys-color-on-tertiary-fixed: #3d0600;
+  --md-sys-color-on-tertiary-fixed-variant: #7b2d27;
+  --md-sys-color-outline: #767588;
+  --md-sys-color-outline-variant: #c5c5d9;
+  --md-sys-color-primary: #1956cd;
+  --md-sys-color-primary-container: #e0e0ff;
+  --md-sys-color-primary-fixed: #e0e0ff;
+  --md-sys-color-primary-fixed-dim: #c0c1fe;
+  --md-sys-color-scrim: #000000;
+  --md-sys-color-secondary: #76536f;
+  --md-sys-color-secondary-container: #ffd7f6;
+  --md-sys-color-secondary-fixed: #ffd7f6;
+  --md-sys-color-secondary-fixed-dim: #e2bbda;
+  --md-sys-color-shadow: #000000;
+  --md-sys-color-surface: #f9f9ff;
+  --md-sys-color-surface-bright: #f9f9ff;
+  --md-sys-color-surface-container: #ededf5;
+  --md-sys-color-surface-container-high: #e8e7ef;
+  --md-sys-color-surface-container-highest: #e2e2e9;
+  --md-sys-color-surface-container-low: #f3f3fb;
+  --md-sys-color-surface-container-lowest: #ffffff;
+  --md-sys-color-surface-dim: #dad9e1;
+  --md-sys-color-surface-tint: #1956cd;
+  --md-sys-color-surface-variant: #e1e1f6;
+  --md-sys-color-tertiary: #98453d;
+  --md-sys-color-tertiary-container: #ffdad5;
+  --md-sys-color-tertiary-fixed: #ffdad5;
+  --md-sys-color-tertiary-fixed-dim: #ffb4a9;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --md-sys-color-background: #131318;
+    --md-sys-color-error: #ffb4aa;
+    --md-sys-color-error-container: #930016;
+    --md-sys-color-inverse-on-surface: #303036;
+    --md-sys-color-inverse-primary: #1956cd;
+    --md-sys-color-inverse-surface: #e2e2e9;
+    --md-sys-color-on-background: #e2e2e9;
+    --md-sys-color-on-error: #69000b;
+    --md-sys-color-on-error-container: #ffdad5;
+    --md-sys-color-on-primary: #002b73;
+    --md-sys-color-on-primary-container: #e0e0ff;
+    --md-sys-color-on-primary-fixed: #001849;
+    --md-sys-color-on-primary-fixed-variant: #0040a2;
+    --md-sys-color-on-secondary: #452640;
+    --md-sys-color-on-secondary-container: #ffd7f6;
+    --md-sys-color-on-secondary-fixed: #2e102a;
+    --md-sys-color-on-secondary-fixed-variant: #5d3c57;
+    --md-sys-color-on-surface: #e2e2e9;
+    --md-sys-color-on-surface-variant: #c5c5d9;
+    --md-sys-color-on-tertiary: #601313;
+    --md-sys-color-on-tertiary-container: #ffdad5;
+    --md-sys-color-on-tertiary-fixed: #3d0600;
+    --md-sys-color-on-tertiary-fixed-variant: #7b2d27;
+    --md-sys-color-outline: #8f8fa2;
+    --md-sys-color-outline-variant: #454556;
+    --md-sys-color-primary: #c0c1fe;
+    --md-sys-color-primary-container: #0040a2;
+    --md-sys-color-primary-fixed: #e0e0ff;
+    --md-sys-color-primary-fixed-dim: #c0c1fe;
+    --md-sys-color-scrim: #000000;
+    --md-sys-color-secondary: #e2bbda;
+    --md-sys-color-secondary-container: #5d3c57;
+    --md-sys-color-secondary-fixed: #ffd7f6;
+    --md-sys-color-secondary-fixed-dim: #e2bbda;
+    --md-sys-color-shadow: #000000;
+    --md-sys-color-surface: #131318;
+    --md-sys-color-surface-bright: #39393f;
+    --md-sys-color-surface-container: #1f1f25;
+    --md-sys-color-surface-container-high: #2a292f;
+    --md-sys-color-surface-container-highest: #34343a;
+    --md-sys-color-surface-container-low: #1b1b20;
+    --md-sys-color-surface-container-lowest: #0e0d14;
+    --md-sys-color-surface-dim: #131318;
+    --md-sys-color-surface-tint: #c0c1fe;
+    --md-sys-color-surface-variant: #454556;
+    --md-sys-color-tertiary: #ffb4a9;
+    --md-sys-color-tertiary-container: #7b2d27;
+    --md-sys-color-tertiary-fixed: #ffdad5;
+    --md-sys-color-tertiary-fixed-dim: #ffb4a9;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --md-sys-color-background: #131318;
+  --md-sys-color-error: #ffb4aa;
+  --md-sys-color-error-container: #930016;
+  --md-sys-color-inverse-on-surface: #303036;
+  --md-sys-color-inverse-primary: #1956cd;
+  --md-sys-color-inverse-surface: #e2e2e9;
+  --md-sys-color-on-background: #e2e2e9;
+  --md-sys-color-on-error: #69000b;
+  --md-sys-color-on-error-container: #ffdad5;
+  --md-sys-color-on-primary: #002b73;
+  --md-sys-color-on-primary-container: #e0e0ff;
+  --md-sys-color-on-primary-fixed: #001849;
+  --md-sys-color-on-primary-fixed-variant: #0040a2;
+  --md-sys-color-on-secondary: #452640;
+  --md-sys-color-on-secondary-container: #ffd7f6;
+  --md-sys-color-on-secondary-fixed: #2e102a;
+  --md-sys-color-on-secondary-fixed-variant: #5d3c57;
+  --md-sys-color-on-surface: #e2e2e9;
+  --md-sys-color-on-surface-variant: #c5c5d9;
+  --md-sys-color-on-tertiary: #601313;
+  --md-sys-color-on-tertiary-container: #ffdad5;
+  --md-sys-color-on-tertiary-fixed: #3d0600;
+  --md-sys-color-on-tertiary-fixed-variant: #7b2d27;
+  --md-sys-color-outline: #8f8fa2;
+  --md-sys-color-outline-variant: #454556;
+  --md-sys-color-primary: #c0c1fe;
+  --md-sys-color-primary-container: #0040a2;
+  --md-sys-color-primary-fixed: #e0e0ff;
+  --md-sys-color-primary-fixed-dim: #c0c1fe;
+  --md-sys-color-scrim: #000000;
+  --md-sys-color-secondary: #e2bbda;
+  --md-sys-color-secondary-container: #5d3c57;
+  --md-sys-color-secondary-fixed: #ffd7f6;
+  --md-sys-color-secondary-fixed-dim: #e2bbda;
+  --md-sys-color-shadow: #000000;
+  --md-sys-color-surface: #131318;
+  --md-sys-color-surface-bright: #39393f;
+  --md-sys-color-surface-container: #1f1f25;
+  --md-sys-color-surface-container-high: #2a292f;
+  --md-sys-color-surface-container-highest: #34343a;
+  --md-sys-color-surface-container-low: #1b1b20;
+  --md-sys-color-surface-container-lowest: #0e0d14;
+  --md-sys-color-surface-dim: #131318;
+  --md-sys-color-surface-tint: #c0c1fe;
+  --md-sys-color-surface-variant: #454556;
+  --md-sys-color-tertiary: #ffb4a9;
+  --md-sys-color-tertiary-container: #7b2d27;
+  --md-sys-color-tertiary-fixed: #ffdad5;
+  --md-sys-color-tertiary-fixed-dim: #ffb4a9;
+  color-scheme: dark;
+}

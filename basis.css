@@ -1,0 +1,1614 @@
+/* =========================================================================
+   Shikaku – basis.css: Aufbau, Bauteile, Standardfarben
+
+   Diese Datei trägt das ganze Gerüst. Die drei Skins (mondrian.css,
+   papier.css, m3.css) überschreiben danach fast nur noch Marken – Farben,
+   Kanten, Radien, Schriften. Wer hier etwas an der GEOMETRIE ändert, ändert
+   es für alle drei; wer eine Farbe ändert, ändert nur den Notfall-Stil, der
+   dasteht, wenn kein Skin geladen ist.
+
+   Warum überhaupt ein vollständiger Farbsatz in basis.css, wenn immer genau
+   ein Skin aktiv ist? Weil der Schnipsel im <head> die drei Skin-Blätter über
+   `disabled` schaltet, und ein Blatt, das gerade geladen wird, ist einen
+   Wimpernschlag lang nicht da. Ohne Standardwerte stünde in diesem
+   Wimpernschlag schwarzer Text auf durchsichtigem Grund. Mit ihnen sieht man
+   eine ruhige, graue Fassung des Spiels – und im schlimmsten Fall (eine
+   Skin-Datei fehlt) ist das Spiel noch bedienbar.
+
+   Aufbau der Datei:
+     1. Marken (hell), Marken (dunkel, zweimal – siehe Kommentar dort)
+     2. Grundlagen und Gerüst
+     3. Kopf, HUD, Werkzeugleiste, Hinweis
+     4. Das Brett: die drei Lagen und die Rechnung in Prozent
+     5. Knöpfe und Formulare
+     6. Dialoge als Blatt von unten
+     7. Rücksichten: Bewegung, Fokus, kleine und große Schirme
+   ========================================================================= */
+
+/* -------------------------------------------------------------------------
+   1. Marken
+
+   Jede Farbe steht zuerst auf blankem :root. Im Media-Block wird sie nur
+   unter :root:not([data-theme="light"]) überschrieben, und ein drittes Mal
+   unter :root[data-theme="dark"]. Das sieht nach Wiederholung aus, ist aber
+   der einzige Weg, bei dem alle drei Fälle stimmen:
+
+     data-theme fehlt   -> "auto": der Media-Block entscheidet.
+     data-theme="light" -> der Media-Block greift NICHT (:not), also hell,
+                           auch auf einem dunkel gestellten System.
+     data-theme="dark"  -> der letzte Block greift, also dunkel, auch auf
+                           einem hell gestellten System.
+
+   Mit nur einem Media-Block gewinnt "hell" nie gegen ein dunkles System;
+   mit nur dem Attribut-Block folgt "auto" dem System nie.
+
+   Eine Feinheit noch, und sie ist im Bild aufgefallen: die beiden dunklen
+   Blöcke stehen hier in :where(). Das ändert am TREFFEN nichts, nur an der
+   Spezifität – sie fällt von zwei Klassenstufen auf eine, also auf dieselbe
+   wie blankes :root. Der Grund: die Werte in dieser Datei sind laut Vertrag
+   "Tokens mit Standardwerten", und ein Standard muss verlieren, sobald ein
+   Skin etwas anderes sagt. Ohne :where() gewinnt
+
+       basis.css   :root:not([data-theme="light"])      (zwei Stufen)
+
+   gegen
+
+       m3.css      :root                                (eine Stufe)
+
+   und im Dunkeln stand dann nicht der Material-3-Stil da, sondern der graue
+   Notfall-Stil aus dieser Datei mit den Formen von Material 3 – mit weißen
+   Zahlenplättchen auf dunklen Flächen, weil die Hälfte der Marken aus der
+   einen und die andere Hälfte aus der anderen Datei kam. Mit :where()
+   überschreibt jeder Skin diese Datei mit einem einzigen :root-Block, und
+   ein Skin braucht einen Dunkel-Block nur dann, wenn er wirklich eigene
+   dunkle Werte hat (mondrian und papier haben sie, m3 holt sie aus
+   m3-farben.css).
+   ------------------------------------------------------------------------- */
+
+:root {
+  /* Grund und Schrift */
+  --grund: #f7f7f5;
+  --grund-rand: #ececeb;          /* der Rand neben dem Band auf breiten Schirmen */
+  --tinte: #17181b;
+  --tinte-leise: #55585e;
+  --tinte-aus: #83868d;           /* ausgeschaltete Knöpfe: eigene Farbe, keine Deckkraft */
+
+  /* Flächen (Karten, Blätter, Knöpfe) */
+  --flaeche: #ffffff;
+  --flaeche-2: #f0f0ee;
+  --kante: rgba(20, 22, 26, .14);
+  --kante-stark: rgba(20, 22, 26, .38);
+
+  /* Das Brett */
+  --brett-grund: #ffffff;
+  --linie: rgba(20, 22, 26, .26);
+  --linie-dicke: 1px;
+  --hilfslinie: rgba(20, 22, 26, .18);
+  --rahmen: 2px;
+  --rahmen-farbe: rgba(20, 22, 26, .55);
+  --radius-teil: 0px;
+  --teil-kante: 1px;
+
+  /* Das Plättchen, in dem die Zahl sitzt */
+  --zahl-grund: #ffffff;
+  --zahl-tinte: #15171a;
+  --zahl-kante: rgba(20, 22, 26, .30);
+
+  /* Die fünf Flächenfarben. Mehr als fünf braucht es nicht: eine gierige
+     Färbung über den Nachbarschaftsgraphen einer Rechteckzerlegung kommt
+     mit fünf immer aus (vier würden reichen, dafür müsste app.js aber
+     rückwärts gehen können – fünf ist der billigere Handel). */
+  --f0: #d9e3f5;
+  --f1: #f6e2d8;
+  --f2: #e2eedd;
+  --f3: #ebe9e4;
+  --f4: #dfdcf0;
+
+  /* Zustände */
+  --gut: #1c7a4b;
+  --gut-flaeche: rgba(28, 122, 75, .18);
+  --fehler: #b3261e;
+  --fehler-flaeche: rgba(179, 38, 30, .16);
+  --fehler-strich: rgba(179, 38, 30, .55);
+  --tippfarbe: #14539e;
+  --tipp-flaeche: rgba(20, 83, 158, .18);
+  --gewaehlt: #17181b;
+
+  /*
+    Die Kante der Vorschau und des Tipp-Rings — eine eigene Marke und nicht
+    einfach --tippfarbe.
+
+    Der Grund ist ein gemessener Fehler und keine Vorliebe: #vorschau ist
+    nicht nur der Umriss beim Ziehen, es IST auch der Zellcursor der
+    Tastatur (app.js zeichnet dafür ein 1×1-Rechteck ohne Urteil, siehe
+    zeichneVorschau). Damit ist diese Kante die einzige Fokusanzeige, die
+    ein Spieler ohne Zeigegerät auf dem Brett hat, und die braucht nach
+    WCAG 1.4.11 mindestens 3:1 gegen den Grund. Im Standard-Stil ist
+    --tippfarbe aber Chromgelb (#f4c300) und der Brettgrund reines Weiß:
+    nachgerechnet 1,66:1 — der Cursor war praktisch unsichtbar. Ein Skin
+    kann diese Marke jetzt getrennt von seiner Tippfarbe setzen, ohne die
+    Farbidentität aufzugeben.
+  */
+  --vorschau-kante: var(--tippfarbe);
+
+  /* Akzent für gefüllte Knöpfe und Schalter */
+  --akzent: #17181b;
+  --akzent-tinte: #ffffff;
+  --akzent-leise: rgba(20, 22, 26, .08);
+  --verweis-farbe: #14539e;
+
+  --schalter-aus: #d7d7d4;
+  --schalter-knopf: #ffffff;
+
+  --hinweis-grund: #24262b;
+  --hinweis-tinte: #f6f6f4;
+
+  --fokus: #14539e;
+  --schleier: rgba(16, 17, 20, .52);
+
+  /* Maße. --band ist die Breite, auf die alles zusammengehalten wird;
+     --chrom ist die Höhe, die Kopf, HUD, Leiste und Ränder zusammen
+     brauchen – daraus rechnet das Brett, wie groß es werden darf. */
+  --band: 560px;
+  --chrom: 256px;
+  --radius: 14px;
+  --radius-klein: 4px;
+  --radius-blatt: 22px;
+  --schatten: 0 1px 2px rgba(20, 22, 26, .10);
+  --schatten-hoch: 0 -8px 34px rgba(20, 22, 26, .22);
+
+  /* Systemschriften, nichts nachzuladen. Die geometrischen Namen zuerst:
+     wer Futura oder Avenir hat, bekommt den Auftritt, den dieses Spiel
+     verdient; alle anderen die Systemschrift, die sowieso schon da ist. */
+  --schrift: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --schrift-zahl: 'Futura', 'Avenir Next', 'Avenir', 'Helvetica Neue', system-ui, -apple-system,
+                  'Segoe UI', Roboto, Arial, sans-serif;
+  --zahl-gewicht: 800;
+  --zahl-sperrung: 0;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    --grund: #131417;
+    --grund-rand: #0d0e10;
+    --tinte: #eceef2;
+    --tinte-leise: #a9adb5;
+    --tinte-aus: #7b7f87;
+
+    --flaeche: #1c1e23;
+    --flaeche-2: #24262c;
+    --kante: rgba(255, 255, 255, .15);
+    --kante-stark: rgba(255, 255, 255, .42);
+
+    --brett-grund: #191b1f;
+    --linie: rgba(255, 255, 255, .26);
+    --hilfslinie: rgba(255, 255, 255, .16);
+    --rahmen-farbe: rgba(255, 255, 255, .50);
+
+    --zahl-grund: #f4f5f7;
+    --zahl-tinte: #15171a;
+    --zahl-kante: rgba(0, 0, 0, .45);
+
+    --f0: #2c3a52;
+    --f1: #4c3a33;
+    --f2: #2e4436;
+    --f3: #33343a;
+    --f4: #383353;
+
+    --gut: #63d69b;
+    --gut-flaeche: rgba(99, 214, 155, .20);
+    --fehler: #ff9d92;
+    --fehler-flaeche: rgba(255, 157, 146, .18);
+    --fehler-strich: rgba(255, 157, 146, .55);
+    --tippfarbe: #8fbcff;
+    --tipp-flaeche: rgba(143, 188, 255, .20);
+    --gewaehlt: #f4f5f7;
+
+    --akzent: #eceef2;
+    --akzent-tinte: #15171a;
+    --akzent-leise: rgba(255, 255, 255, .10);
+    --verweis-farbe: #8fbcff;
+
+    --schalter-aus: #3a3d44;
+    --schalter-knopf: #f4f5f7;
+
+    --hinweis-grund: #eceef2;
+    --hinweis-tinte: #15171a;
+
+    --fokus: #8fbcff;
+    --schleier: rgba(0, 0, 0, .62);
+
+    --schatten: 0 1px 2px rgba(0, 0, 0, .40);
+    --schatten-hoch: 0 -8px 34px rgba(0, 0, 0, .55);
+
+    color-scheme: dark;
+  }
+}
+
+:root:where([data-theme="dark"]) {
+  --grund: #131417;
+  --grund-rand: #0d0e10;
+  --tinte: #eceef2;
+  --tinte-leise: #a9adb5;
+  --tinte-aus: #7b7f87;
+
+  --flaeche: #1c1e23;
+  --flaeche-2: #24262c;
+  --kante: rgba(255, 255, 255, .15);
+  --kante-stark: rgba(255, 255, 255, .42);
+
+  --brett-grund: #191b1f;
+  --linie: rgba(255, 255, 255, .26);
+  --hilfslinie: rgba(255, 255, 255, .16);
+  --rahmen-farbe: rgba(255, 255, 255, .50);
+
+  --zahl-grund: #f4f5f7;
+  --zahl-tinte: #15171a;
+  --zahl-kante: rgba(0, 0, 0, .45);
+
+  --f0: #2c3a52;
+  --f1: #4c3a33;
+  --f2: #2e4436;
+  --f3: #33343a;
+  --f4: #383353;
+
+  --gut: #63d69b;
+  --gut-flaeche: rgba(99, 214, 155, .20);
+  --fehler: #ff9d92;
+  --fehler-flaeche: rgba(255, 157, 146, .18);
+  --fehler-strich: rgba(255, 157, 146, .55);
+  --tippfarbe: #8fbcff;
+  --tipp-flaeche: rgba(143, 188, 255, .20);
+  --gewaehlt: #f4f5f7;
+
+  --akzent: #eceef2;
+  --akzent-tinte: #15171a;
+  --akzent-leise: rgba(255, 255, 255, .10);
+  --verweis-farbe: #8fbcff;
+
+  --schalter-aus: #3a3d44;
+  --schalter-knopf: #f4f5f7;
+
+  --hinweis-grund: #eceef2;
+  --hinweis-tinte: #15171a;
+
+  --fokus: #8fbcff;
+  --schleier: rgba(0, 0, 0, .62);
+
+  --schatten: 0 1px 2px rgba(0, 0, 0, .40);
+  --schatten-hoch: 0 -8px 34px rgba(0, 0, 0, .55);
+
+  color-scheme: dark;
+}
+
+/* -------------------------------------------------------------------------
+   2. Grundlagen und Gerüst
+   ------------------------------------------------------------------------- */
+
+* { box-sizing: border-box; }
+
+/* Muss stechen: mehrere Bauteile setzen selbst ein display und würden das
+   Attribut sonst überstimmen (#vorschau, #hinweis, #neu-laeuft). */
+[hidden] { display: none !important; }
+
+html {
+  height: 100%;
+  background: var(--grund-rand);
+  overscroll-behavior: none;
+}
+
+/*
+  Kein Wrapper-Element um alles: der DOM-Vertrag setzt Kopf, HUD, Feld,
+  Leiste und Hinweis direkt unter <body>, und daran wird nicht gerüttelt.
+  Also ist <body> selbst die Spalte. Das Band (max-width) hält die Sache auf
+  breiten Schirmen zusammen – ein Brett, das sich über 1600 px zieht, ist
+  kein Rätsel mehr, sondern eine Landkarte.
+*/
+body {
+  margin: 0 auto;
+  max-width: var(--band);
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right)
+           env(safe-area-inset-bottom) env(safe-area-inset-left);
+  background: var(--grund);
+  color: var(--tinte);
+  font-family: var(--schrift);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+h1, h2, h3, h4, p, ul { margin: 0; }
+
+button {
+  font: inherit;
+  color: inherit;
+  margin: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+
+/* Alle Symbole kommen aus dem Sprite im Dokument und färben sich über
+   currentColor – deshalb steht hier keine Farbe. */
+.symbol {
+  width: 24px;
+  height: 24px;
+  display: block;
+  flex: none;
+  fill: currentColor;
+}
+
+/* -------------------------------------------------------------------------
+   3. Kopf, HUD, Werkzeugleiste, Hinweis
+   ------------------------------------------------------------------------- */
+
+/*
+  Zwei Zeilen, drei Spalten, und die beiden Knöpfe stehen über beide Zeilen.
+  So bleibt der Untertitel unter dem Titel, ohne dass ein Wrapper-Element um
+  die Mitte nötig wird (der DOM-Vertrag will h1 als direktes Kind von .kopf).
+*/
+.kopf {
+  flex: none;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0 8px;
+  padding: 8px 12px 4px;
+}
+
+.kopf > .symbolknopf { grid-row: 1 / 3; }
+.kopf > .symbolknopf:first-child { grid-column: 1; }
+.kopf > .symbolknopf:last-child { grid-column: 3; }
+
+.kopf__titel {
+  grid-column: 2;
+  grid-row: 1;
+  text-align: center;
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: .01em;
+  line-height: 1.15;
+}
+
+.kopf__untertitel {
+  grid-column: 2;
+  grid-row: 2;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.2;
+  color: var(--tinte-leise);
+}
+
+.symbolknopf {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--tinte);
+  transition: background-color .15s;
+}
+
+.symbolknopf:hover { background: var(--akzent-leise); }
+.symbolknopf:active { background: var(--kante); }
+
+/*
+  Drei gleich gebaute Kärtchen. Die Notizzeile ist auch dann da, wenn sie
+  leer bleibt – sonst wären die Kärtchen verschieden hoch und die Werte
+  ständen auf verschiedener Höhe, was bei einer laufenden Uhr sofort auffällt.
+*/
+/*
+  Der freie Platz gehört ins Spielfeld, nicht über die Kärtchen.
+
+  Das Größenproblem ist echt: ein quadratisches Brett auf 390 x 844 ist von
+  der BREITE begrenzt (366 px), also bleiben rund 200 px Höhe übrig, die
+  niemand braucht. Hier stand vorher `margin-top: auto` an .hud UND an
+  .leiste, mit der Begründung, der Rest solle sich gleichmäßig auf "über den
+  Kärtchen" und "über der Leiste" verteilen, damit der Spielblock im
+  Daumenbereich liegt.
+
+  Nachgemessen im Browser hält das nicht: mit den zwei automatischen Rändern
+  stand das Brett bei y = 287..653, ohne sie – .feld wächst, das Brett steht
+  in der Mitte des Restes – bei genau denselben y = 287..653. Der Daumen
+  gewinnt also nichts. Bezahlt wurde es mit 96,66 px Leere zwischen dem
+  Titelbalken und den Kärtchen, und die liest sich im Bild nicht als Absicht,
+  sondern als vergessener Abstand.
+
+  Also: Kärtchen dicht unter den Kopf (das ist die natürliche Leserichtung –
+  Titel, Stand, Brett), .feld wächst und stellt das Brett mittig in den Rest,
+  die Leiste sitzt weiter unten am Rand. Der übrige Platz verteilt sich
+  symmetrisch ums Brett und sieht damit gewollt aus.
+
+  .leiste braucht dafür kein `margin-top: auto` mehr: sobald .feld wächst,
+  bekommt ein automatischer Rand ohnehin nichts mehr zu sehen.
+*/
+.hud {
+  flex: none;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 4px 12px 8px;
+}
+
+.karte {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 8px 6px 7px;
+  min-height: 44px;
+  border: 1px solid var(--kante);
+  border-radius: var(--radius);
+  background: var(--flaeche);
+  box-shadow: var(--schatten);
+}
+
+.karte--knopf { cursor: pointer; transition: border-color .15s, background-color .15s; }
+.karte--knopf:hover { border-color: var(--kante-stark); }
+
+.karte__marke {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--tinte-leise);
+}
+
+.karte__wert {
+  font-size: 21px;
+  font-weight: 800;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Die Notizzeile ist schmal und darf nie umbrechen: ein zweizeiliger
+   Weltrekord würde alle drei Kärtchen höher machen. */
+.karte__notiz {
+  font-size: 11px;
+  line-height: 1.25;
+  min-height: 1.25em;
+  color: var(--tinte-leise);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/*
+  Das Feld ist genau so hoch wie das Brett – es wächst nicht (siehe den
+  Kommentar bei .hud), darf aber schrumpfen: auf einem sehr flachen Schirm
+  rechnet das Brett seine Breite ohnehin aus der verfügbaren Höhe.
+*/
+.feld {
+  /* Wächst und nimmt damit den ganzen Rest auf – siehe die Begründung über
+     .hud. min-height: 0 ist die Bedingung dafür, dass ein zu hohes Brett
+     schrumpfen darf statt die Leiste hinauszuschieben. */
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 12px 8px;
+}
+
+.brett-huelle {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.leiste {
+  flex: none;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  padding: 4px 12px calc(8px + env(safe-area-inset-bottom));
+}
+
+/* 56 px hoch und mindestens ein Fünftel von 366 px breit (= 70 px): beides
+   deutlich über den 44 px, unter denen ein Ziel auf dem Telefon zur Lotterie
+   wird. */
+.werkzeug {
+  min-height: 56px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 6px 2px;
+  border: 1px solid var(--kante);
+  border-radius: var(--radius);
+  background: var(--flaeche);
+  color: var(--tinte);
+  box-shadow: var(--schatten);
+  transition: background-color .15s, border-color .15s, color .15s;
+}
+
+.werkzeug .symbol { width: 22px; height: 22px; }
+
+.werkzeug__text {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.werkzeug:hover:not(:disabled) { border-color: var(--kante-stark); }
+.werkzeug:active:not(:disabled) { background: var(--flaeche-2); }
+
+/*
+  Ausgeschaltet heißt: eigene Farbe, nicht halbe Deckkraft. Mit opacity .4
+  rechnet sich der Text von 12:1 auf unter 3:1 herunter und ist auf einem
+  Telefon in der Sonne einfach nicht mehr da.
+*/
+.werkzeug:disabled {
+  color: var(--tinte-aus);
+  background: var(--flaeche-2);
+  border-color: var(--kante);
+  cursor: default;
+  box-shadow: none;
+}
+
+.werkzeug--neu { color: var(--verweis-farbe); }
+.werkzeug--neu:disabled { color: var(--tinte-aus); }
+
+/*
+  Der Hinweis liegt fest über dem Brett, nicht im Fluss: eine Meldung, die
+  Platz beansprucht, verschiebt das Brett unter dem Finger – und wer gerade
+  ein Rechteck zieht, zieht dann daneben.
+
+  pointer-events: none ist dabei die Bedingung, nicht die Zugabe. Auf dem
+  Telefon liegt die Meldung im freien Streifen zwischen Brett und Leiste,
+  auf einem breiten Schirm reicht sie über den unteren Brettrand – und ohne
+  diese Zeile fing sie dort die Klicks ab: ein Antippen der untersten
+  Zellreihe kam drei Sekunden lang nicht an, und niemand konnte sich
+  erklären, warum. Eine Meldung, die man nicht bedienen kann, darf keine
+  Eingaben annehmen.
+*/
+/*
+  Beidseitig verankert, nicht `left: 50%` mit `translateX(-50%)`.
+
+  Der Unterschied ist nicht Geschmack, sondern eine Falle im Kasten-Modell:
+  ein festbezogener Kasten ohne eigene Breite passt sich seinem Inhalt an,
+  und der Raum, der ihm dafür zur Verfügung steht, reicht von `left` bis zum
+  rechten Rand. Mit `left: 50%` war das die HALBE Fensterbreite – gemessen
+  195 px von 390. Die `max-width: min(92vw, 420px)` konnte er damit nie
+  erreichen; der längste Satz des Spiels ("Die Partie ist gespeichert – beim
+  nächsten Start ist sie wieder da.") stand in fünf Zeilen und lag als hoher
+  Klotz über dem Brett. Mit beiden Rändern gesetzt sind es 358,8 px und drei
+  Zeilen.
+
+  Die Mitte macht jetzt `margin-inline: auto` bei `width: fit-content` – das
+  zentriert ohne Transformation, und damit bleibt `transform` frei für die
+  Einblendbewegung unten.
+*/
+.hinweis {
+  position: fixed;
+  inset-inline: 12px;
+  width: fit-content;
+  margin-inline: auto;
+  bottom: calc(84px + env(safe-area-inset-bottom));
+  z-index: 30;
+  pointer-events: none;
+  max-width: min(92vw, 420px);
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: var(--hinweis-grund);
+  color: var(--hinweis-tinte);
+  font-size: 14px;
+  line-height: 1.35;
+  text-align: center;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, .28);
+  animation: hinweis-herein .18s ease-out;
+}
+
+@keyframes hinweis-herein {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* -------------------------------------------------------------------------
+   4. Das Brett
+
+   Drei Lagen über demselben Quadrat, und die Malreihenfolge ist Absicht:
+
+     #raster  liegt im Fluss. Seine Zellen sind durchsichtig und tragen die
+              Rasterlinien als rechten und unteren Rand. Ränder von
+              Elementen im Fluss werden VOR allen positionierten
+              Geschwistern gemalt – deshalb liegen die Linien unter den
+              Flächen, ohne dass ein z-index nötig wäre.
+     #teile   absolut, z-index 2. Deckt die Linien im Inneren einer fertigen
+              Fläche zu. Das ist der ganze Gedanke des Standard-Stils: eine
+              gesetzte Fläche ist eine Fläche, nicht gefärbtes
+              Millimeterpapier.
+     .zahl    positioniert, z-index 3. Steht damit über den Flächen, obwohl
+              sie im Fluss-Zweig hängt – möglich, weil #raster und .zelle
+              selbst KEINEN Stapelkontext aufmachen (kein z-index, keine
+              Transformation, keine Deckkraft). Wer dort einen z-index
+              einträgt, schließt die Zahlen ein und sie verschwinden unter
+              den Flächen.
+     #vorschau absolut, z-index 4. Ganz oben, sonst wäre das Rechteck, das
+              man gerade zieht, unter dem verborgen, was schon liegt.
+     ::after  der Rahmen, z-index 5. Liegt ÜBER allem, weil bei Mondrian die
+              schwarze Linie über der Farbe liegt und nicht darunter.
+
+   Die verworfene Alternative: Linien als repeating-linear-gradient auf dem
+   Brett. Das wäre kürzer, flimmert aber bei 12 Spalten auf 366 px, weil die
+   Kachelbreite 30,5 px ist und der Browser Hintergrundkacheln anders rundet
+   als Ränder. Ränder auf den Zellen sind gestochen scharf.
+   ------------------------------------------------------------------------- */
+
+.brett {
+  position: relative;
+  /* Stapelkontext, damit die z-index-Werte der Lagen unter sich bleiben und
+     die Zahlen nicht plötzlich über dem Kopf oder einem Dialog liegen. */
+  isolation: isolate;
+  /*
+    Der Größencontainer ist der Trick hinter der lesbaren Zahl: die
+    Nachkommen dürfen mit cqw rechnen, also in Prozent der BRETTBREITE. Eine
+    Zellbreite ist damit 100cqw / var(--spalten), und die Schriftgröße hängt
+    an der Zelle statt am Bildschirm. Das Element selbst kann seine eigenen
+    cq-Einheiten nicht benutzen – die Zahl ist aber ein Nachkomme, und darum
+    geht es hier.
+  */
+  container-type: size;
+
+  width: min(100%, calc((100dvh - var(--chrom)) * var(--spalten) / var(--zeilen)));
+  aspect-ratio: var(--spalten) / var(--zeilen);
+
+  background: var(--brett-grund);
+  box-shadow: var(--brett-schatten, none);
+  border-radius: var(--brett-radius, 0);
+
+  /* Ziehen darf nicht scrollen, und ein Doppeltipp darf nichts markieren. */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.brett::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  border: var(--rahmen) solid var(--rahmen-farbe);
+  border-radius: inherit;
+}
+
+/*
+  Alle Zeigerereignisse gehören dem Brett. Der Vertrag verlangt, dass die
+  Zelle aus clientX/clientY und getBoundingClientRect() GERECHNET wird –
+  elementFromPoint und ein Ereignis je Zelle versagen, sobald der Finger
+  über den Brettrand hinauszieht. Damit gar nicht erst jemand auf die Idee
+  kommt, nehmen die Lagen keine Ereignisse an.
+*/
+.raster, .teile, .vorschau, .zelle, .zahl { pointer-events: none; }
+
+.raster {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: repeat(var(--spalten), 1fr);
+  grid-template-rows: repeat(var(--zeilen), 1fr);
+}
+
+.zelle {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 0;
+  /* Nur rechts und unten: der linke und der obere Rand des Bretts kommen
+     vom Rahmen. Vier Ränder je Zelle gäben doppelt so dicke Linien im
+     Inneren wie außen. */
+  border-right: var(--linie-dicke) solid var(--linie);
+  border-bottom: var(--linie-dicke) solid var(--linie);
+}
+
+.zahl {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  font-family: var(--schrift-zahl);
+  font-weight: var(--zahl-gewicht);
+  letter-spacing: var(--zahl-sperrung);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--zahl-tinte);
+  background: var(--zahl-grund);
+  border-radius: var(--radius-klein);
+  box-shadow: 0 0 0 1px var(--zahl-kante);
+
+  /* Notnagel für Browser ohne Container-Abfragen: lieber eine feste,
+     brauchbare Größe als eine ungültige Zeile und damit gar keine. */
+  font-size: 16px;
+  min-width: 22px;
+  min-height: 22px;
+  padding: 2px 3px;
+
+  font-size: clamp(11px, calc(100cqw / var(--spalten) * .50), 30px);
+  min-width: calc(100cqw / var(--spalten) * .70);
+  min-height: calc(100cqw / var(--spalten) * .70);
+  padding: 0 calc(100cqw / var(--spalten) * .07);
+}
+
+.teile {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+
+/*
+  Die Flächen rechnen in Prozent des Bretts, nicht in Pixeln. app.js setzt
+  nur die vier Zahlen --x/--y/--b/--h; alles andere steht hier. Warum so:
+  eine in JS gerechnete Pixelgröße müsste bei jedem Drehen des Geräts und
+  bei jeder Änderung der Schriftgröße neu gerechnet werden, und genau das
+  wird beim ersten Umbau vergessen. Prozente rechnet der Browser selbst neu.
+*/
+.teil, .vorschau {
+  position: absolute;
+  left: calc(100% * var(--x) / var(--spalten));
+  top: calc(100% * var(--y) / var(--zeilen));
+  width: calc(100% * var(--b) / var(--spalten));
+  height: calc(100% * var(--h) / var(--zeilen));
+}
+
+.teil {
+  /* background-color, nicht background: sonst räumt die Kurzschreibweise
+     das Schraffurbild wieder weg, das den Fehlerzustand kennzeichnet. */
+  background-color: var(--teil-farbe, var(--f3));
+  border-radius: var(--radius-teil);
+  /*
+    Die Kante sitzt MITTIG auf dem Rand der Fläche (outline-offset ist die
+    halbe Breite nach innen). Zwei Flächen, die aneinander stoßen, zeichnen
+    ihre Kante damit an dieselbe Stelle und man sieht eine Linie – mit einem
+    border wären es zwei nebeneinander und die Linie doppelt so dick wie am
+    Brettrand.
+  */
+  outline: var(--teil-kante) solid var(--linie);
+  outline-offset: calc(var(--teil-kante) / -2);
+  transition: background-color .18s, box-shadow .18s, outline-color .18s;
+}
+
+/*
+  Die Farbe kommt aus app.js. Weil der Vertrag nur die Zustandsklassen
+  festlegt und nicht, WIE die gierige Färbung ihr Ergebnis anschreibt, nimmt
+  diese Datei alle drei naheliegenden Schreibweisen an: data-farbe, eine
+  Klasse teil--fN und eine Klasse teil--farbe-N. Drei Zeilen mehr sind
+  billiger als ein Brett, auf dem alle Flächen gleich aussehen, weil die
+  beiden Dateien sich um ein Wort verpasst haben. Setzt app.js --teil-farbe
+  selbst, gewinnt das ohnehin.
+*/
+.teil[data-farbe="0"], .teil--f0, .teil--farbe-0 { --teil-farbe: var(--f0); }
+.teil[data-farbe="1"], .teil--f1, .teil--farbe-1 { --teil-farbe: var(--f1); }
+.teil[data-farbe="2"], .teil--f2, .teil--farbe-2 { --teil-farbe: var(--f2); }
+.teil[data-farbe="3"], .teil--f3, .teil--farbe-3 { --teil-farbe: var(--f3); }
+.teil[data-farbe="4"], .teil--f4, .teil--farbe-4 { --teil-farbe: var(--f4); }
+.teil[data-farbe="5"], .teil--f5, .teil--farbe-5 { --teil-farbe: var(--f0); }
+
+/*
+  Hilfslinien: die Kästchengrenzen bleiben auch INNERHALB einer gesetzten
+  Fläche zu sehen. Wer eine 12 gelegt hat und nachzählen will, ob es
+  wirklich 3×4 sind, braucht das; wer die ruhige Fläche will, schaltet es
+  aus. Standard ist an, weil Nachzählen häufiger vorkommt als Bildbetrachtung.
+
+  Gezeichnet wird auf der Fläche SELBST und nicht als Lage über allen
+  Flächen. Der erste Versuch war die Lage (ein Verlauf über #teile), und im
+  Bild fiel auf, warum das falsch ist: die Lage zeichnet auch über die leeren
+  Kästchen, und sie zeichnet um eine Linienbreite verschoben, weil der
+  Zellrand innen sitzt und der Verlauf außen anfängt. Auf der Fläche selbst
+  ist beides gelöst – eine Fläche ist immer genau --b Kästchen breit, also
+  liegt jede Linie mit background-position exakt dort, wo der verdeckte
+  Zellrand ist, und leere Kästchen bekommen gar keine.
+*/
+/* Das :not() ist nicht Zierde: die fehlerhafte Fläche trägt eine Schraffur
+   im selben background-image, und ohne den Ausschluss gewinnt diese Regel
+   (drei Klassenstufen gegen zwei) und die Schraffur war im Bild weg. */
+:root[data-hilfslinien="an"] .teil:not(.teil--fehler) {
+  background-image:
+    repeating-linear-gradient(90deg, var(--hilfslinie) 0 var(--linie-dicke),
+      transparent var(--linie-dicke) calc(100% / var(--b))),
+    repeating-linear-gradient(180deg, var(--hilfslinie) 0 var(--linie-dicke),
+      transparent var(--linie-dicke) calc(100% / var(--h)));
+  background-position: calc(var(--linie-dicke) * -1) calc(var(--linie-dicke) * -1);
+}
+
+/*
+  Der Fehlerzustand hängt NICHT nur an der Farbe: dazu kommt eine Schraffur
+  und eine gestrichelte Kante. Wer Rot und Grün nicht unterscheiden kann,
+  sieht trotzdem sofort, welche Fläche nicht passt – und wer das Bild
+  ausdruckt oder einen Bildschirm im Graustufenmodus hat, auch.
+
+  Der doppelte Klassenname ist Absicht: .teil[data-farbe="1"] hat zwei
+  einfache Selektoren und würde --teil-farbe sonst zurückgewinnen. Im ersten
+  Bild war die fehlerhafte Fläche deshalb kobaltblau mit Schraffur statt
+  neutral – lesbar, aber die Farbe ist im Spiel eine Aussage über die
+  Nachbarschaft und keine über richtig und falsch.
+*/
+.teil.teil--fehler {
+  --teil-farbe: var(--fehler-flaeche);
+  background-image: repeating-linear-gradient(45deg,
+    var(--fehler-strich) 0 3px, transparent 3px 9px);
+  background-position: 0 0;
+  outline: max(2px, var(--teil-kante)) dashed var(--fehler);
+  outline-offset: -2px;
+}
+
+.teil--gut { outline-color: var(--linie); }
+
+.teil--gewaehlt {
+  box-shadow: inset 0 0 0 3px var(--gewaehlt);
+}
+
+/*
+  Zwei Ringe, nicht einer: außen gestrichelt in der Tippfarbe, innen ein
+  geschlossener Ring in der Farbe des Zahlenplättchens. Mit einem einzigen
+  Ring war der Tipp auf der Fläche unsichtbar, die zufällig dieselbe Farbe
+  hatte – im Mondrian-Stil ist die Tippfarbe Chromgelb, und auf der gelben
+  Fläche sah man gar nichts. Zwei Ringe in gegenläufiger Helligkeit sind auf
+  allen fünf Flächenfarben zu sehen.
+
+  Und er blinkt dreimal und hört dann auf: ein Dauerblinken zieht das Auge
+  für den Rest der Partie an sich.
+*/
+.teil--tipp {
+  outline: 3px dashed var(--vorschau-kante);
+  outline-offset: -3px;
+  box-shadow: inset 0 0 0 5px var(--zahl-grund);
+  animation: tipp-puls 1.1s ease-in-out 3;
+}
+
+@keyframes tipp-puls {
+  0%, 100% { box-shadow: inset 0 0 0 5px var(--zahl-grund); }
+  50%      { box-shadow: inset 0 0 0 5px var(--zahl-grund),
+                         inset 0 0 0 999px var(--tipp-flaeche); }
+}
+
+/* Eine frisch gesetzte Fläche wächst kurz auf. Das ist die einzige
+   Rückmeldung dafür, dass der Zug angekommen ist – ein Ton wäre auf dem
+   Telefon meist stumm, eine Vibration ist abschaltbar. */
+.teil--neu { animation: teil-herein .16s ease-out; }
+
+@keyframes teil-herein {
+  from { transform: scale(.94); opacity: .25; }
+  to   { transform: none; opacity: 1; }
+}
+
+.vorschau {
+  z-index: 4;
+  background-color: var(--tipp-flaeche);
+  outline: 3px solid var(--vorschau-kante);
+  outline-offset: -3px;
+  border-radius: var(--radius-teil);
+}
+
+.vorschau--gut {
+  background-color: var(--gut-flaeche);
+  outline-color: var(--gut);
+}
+
+.vorschau--fehler {
+  background-color: var(--fehler-flaeche);
+  background-image: repeating-linear-gradient(45deg,
+    var(--fehler-strich) 0 3px, transparent 3px 9px);
+  outline-color: var(--fehler);
+  outline-style: dashed;
+}
+
+/* -------------------------------------------------------------------------
+   5. Knöpfe und Formulare
+   ------------------------------------------------------------------------- */
+
+.knopf {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 20px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: transparent;
+  font-size: 15px;
+  font-weight: 700;
+  transition: background-color .15s, border-color .15s, color .15s;
+}
+
+.knopf--voll {
+  background: var(--akzent);
+  color: var(--akzent-tinte);
+}
+
+.knopf--voll:hover { filter: brightness(1.12); }
+
+.knopf--rand {
+  border-color: var(--kante-stark);
+  color: var(--tinte);
+}
+
+.knopf--rand:hover { background: var(--akzent-leise); }
+
+/*
+  Knopfreihe für Stil, Farbschema und Sprache. Der Haken erscheint erst,
+  wenn die Möglichkeit gewählt ist – und er nimmt vorher keinen Platz weg,
+  sonst würden die Knöpfe beim Umschalten springen.
+
+  Welche Kennzeichnung app.js setzt, legt der Vertrag nicht fest. Also
+  gelten hier alle üblichen: aria-pressed, aria-checked und eine Klasse.
+*/
+.wahl {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.wahl__option {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 14px;
+  border: 1px solid var(--kante-stark);
+  border-radius: 999px;
+  background: var(--flaeche);
+  color: var(--tinte);
+  font-size: 14px;
+  font-weight: 600;
+  transition: background-color .15s, border-color .15s, color .15s;
+}
+
+.wahl__haken {
+  width: 0;
+  height: 18px;
+  fill: currentColor;
+  transition: width .15s;
+  overflow: hidden;
+}
+
+.wahl__option:hover { background: var(--akzent-leise); }
+
+.wahl__option[aria-pressed="true"],
+.wahl__option[aria-checked="true"],
+.wahl__option--gewaehlt,
+.wahl__option.ist-an {
+  background: var(--akzent);
+  border-color: var(--akzent);
+  color: var(--akzent-tinte);
+}
+
+.wahl__option[aria-pressed="true"] .wahl__haken,
+.wahl__option[aria-checked="true"] .wahl__haken,
+.wahl__option--gewaehlt .wahl__haken,
+.wahl__option.ist-an .wahl__haken { width: 18px; }
+
+/* Eine Zeile mit Text links und Schalter rechts. Das Berührziel ist die
+   ganze Zeile (48 px hoch), nicht nur der Schalter – ein <label> gibt den
+   Klick an das Kästchen weiter, und damit stimmen die 44 px auch dann,
+   wenn der Schalter selbst nur 32 px hoch ist. */
+.zeile {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  min-height: 48px;
+  padding: 4px 0;
+  cursor: pointer;
+}
+
+.zeile__text { font-size: 15px; }
+
+/*
+  Der Schalter ist das Kästchen selbst, ohne Hülle und ohne Pseudo-Element:
+  bei einem <input> ist ::after je nach Browser nicht zuverlässig da. Der
+  Knauf ist deshalb ein Hintergrundbild, das von links nach rechts wandert.
+*/
+.schalter {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 52px;
+  height: 32px;
+  flex: none;
+  margin: 0;
+  border: 2px solid var(--kante-stark);
+  border-radius: 999px;
+  background-color: var(--schalter-aus);
+  background-image: radial-gradient(circle at 50% 50%,
+    var(--schalter-knopf) 0 45%, transparent 47%);
+  background-repeat: no-repeat;
+  background-size: 26px 26px;
+  background-position: left 0px center;
+  cursor: pointer;
+  transition: background-color .18s, background-position .18s, border-color .18s;
+}
+
+/*
+  Eingeschaltet wechselt nicht nur die Bahn, sondern auch der Knauf: er
+  nimmt --akzent-tinte, also die Farbe, die auf dem Akzent lesbar ist. Im
+  Bild war das ein echter Fehler und kein Feinschliff – im dunklen
+  Mondrian-Stil ist der Akzent Elfenbein und der Knauf war es auch, also
+  stand da ein elfenbeinfarbener Block, an dem man nicht erkennen konnte,
+  ob der Schalter an oder aus ist. Für "aus" bleibt es beim hellen Knauf
+  auf der grauen Bahn.
+*/
+.schalter:checked {
+  background-color: var(--akzent);
+  border-color: var(--akzent);
+  background-image: radial-gradient(circle at 50% 50%,
+    var(--akzent-tinte) 0 45%, transparent 47%);
+  background-position: right 0px center;
+}
+
+.kuerzel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  min-height: 48px;
+}
+
+.kuerzel--ende {
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 14px;
+}
+
+.kuerzel__marke { font-size: 15px; }
+
+.kuerzel__feld {
+  width: 5.2ch;
+  min-height: 48px;
+  padding: 0 6px;
+  border: 2px solid var(--kante-stark);
+  border-radius: 10px;
+  background: var(--flaeche);
+  color: var(--tinte);
+  font-family: var(--schrift-zahl);
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+/*
+  Der Platzhalter nimmt --tinte-leise und NICHT --tinte-aus.
+
+  --tinte-aus ist die Farbe ausgeschalteter Knöpfe, und für die darf der
+  Kontrast unter 4,5:1 liegen (WCAG 1.4.3 nimmt inaktive Bauteile
+  ausdrücklich aus). Ein Platzhalter in einem bedienbaren Feld ist aber
+  Text wie jeder andere und fällt unter dieselbe Schwelle: nachgerechnet
+  ergab --tinte-aus auf --flaeche im Standard-Stil 3,62:1 (hell) und
+  4,24:1 (dunkel), im Material-Stil 4,07:1 — also dreimal unter AA. Mit
+  --tinte-leise sind es 8,8:1 bzw. 8,2:1 und 8,5:1, und der Platzhalter
+  ist trotzdem deutlich leiser als eine echte Eingabe (19:1).
+*/
+.kuerzel__feld::placeholder { color: var(--tinte-leise); letter-spacing: .12em; }
+
+/* Die Reiter der Rangliste. Vier Stufen passen auf 366 px nicht in eine
+   Zeile, sobald die Wörter länger werden (italienisch "Esperto"), darum
+   darf die Reihe waagrecht schieben – mit sichtbarem Rest, damit man merkt,
+   dass da noch etwas ist. */
+.reiter-leiste {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+  margin-bottom: 12px;
+}
+
+.reiter-leiste::-webkit-scrollbar { display: none; }
+
+.reiter {
+  min-height: 44px;
+  flex: 1 0 auto;
+  padding: 0 14px;
+  border: 1px solid var(--kante);
+  border-radius: 999px;
+  background: var(--flaeche);
+  color: var(--tinte-leise);
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: background-color .15s, color .15s, border-color .15s;
+}
+
+.reiter[aria-selected="true"],
+.reiter[aria-pressed="true"],
+.reiter--gewaehlt,
+.reiter.ist-an {
+  background: var(--akzent);
+  border-color: var(--akzent);
+  color: var(--akzent-tinte);
+}
+
+/*
+  Die Rangliste selbst baut app.js. Damit sie in jedem Fall wie eine Liste
+  aussieht, sind hier beide naheliegenden Formen gestaltet: eine Tabelle und
+  eine Liste aus Zeilen. Was nicht kommt, kostet nichts.
+*/
+.rangliste { font-variant-numeric: tabular-nums; }
+
+.rangliste table { width: 100%; border-collapse: collapse; }
+
+.rangliste th,
+.rangliste td {
+  padding: 9px 6px;
+  text-align: left;
+  border-bottom: 1px solid var(--kante);
+}
+
+.rangliste th {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--tinte-leise);
+}
+
+.rangliste th:last-child,
+.rangliste td:last-child { text-align: right; }
+
+.rangliste ol, .rangliste ul { list-style: none; margin: 0; padding: 0; }
+
+.rangliste li,
+.rangliste .rang__zeile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 4px 2px;
+  border-bottom: 1px solid var(--kante);
+}
+
+.rangliste .rang__platz {
+  width: 2.4em;
+  font-weight: 800;
+  color: var(--tinte-leise);
+}
+
+.rangliste .rang__zeit { margin-left: auto; font-weight: 700; }
+
+/*
+  Die eigene Zeile wird hervorgehoben – wer sich in einer Liste aus zehn
+  Kürzeln suchen muss, findet sich nicht.
+
+  Und sie hängt NICHT nur an der Farbe. Eine hinterlegte Zeile ist für
+  jemanden mit einer Farbsehschwäche unter Umständen dieselbe Zeile wie
+  jede andere, und "das bin ich" ist die einzige Aussage, die diese
+  Hervorhebung überhaupt macht. Also kommen ein Balken an der Anfangskante
+  und fette Schrift dazu; für die Vorlesehilfe setzt app.js zusätzlich
+  aria-current an die Zeile.
+*/
+.rangliste .rang__zeile--du,
+.rangliste li.ist-du {
+  background: var(--tipp-flaeche);
+  border-radius: 8px;
+  box-shadow: inset 3px 0 0 0 var(--tippfarbe);
+  font-weight: 700;
+}
+
+/* Die vier Stufen im Neu-Dialog: zwei Spalten, weil vier Knöpfe
+   untereinander auf dem Telefon den Abbrechen-Knopf aus dem Bild schieben. */
+.stufen {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.stufe {
+  min-height: 68px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+  padding: 10px 14px;
+  border: 1px solid var(--kante-stark);
+  border-radius: var(--radius);
+  background: var(--flaeche);
+  color: var(--tinte);
+  text-align: left;
+  transition: background-color .15s, border-color .15s;
+}
+
+.stufe:hover { background: var(--akzent-leise); }
+
+.stufe__name { font-size: 16px; font-weight: 700; }
+.stufe__mass { font-size: 13px; color: var(--tinte-leise); font-variant-numeric: tabular-nums; }
+
+/* -------------------------------------------------------------------------
+   6. Dialoge
+
+   Alle fünf sind echte <dialog>-Elemente und fahren als Blatt von unten
+   herein. Auf dem Telefon ist das richtig: der Daumen ist unten, und ein
+   Kasten in der Bildmitte lässt oben und unten Platz liegen, den ein langer
+   Regeltext braucht. Auf breiten Schirmen bleibt es dasselbe Blatt, nur
+   schmal und mittig – zwei Bauformen zu pflegen wäre der Preis für eine
+   Kleinigkeit.
+   ------------------------------------------------------------------------- */
+
+.dlg {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--tinte);
+  overflow: hidden;
+}
+
+.dlg[open] {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.dlg::backdrop {
+  background: var(--schleier);
+  animation: schleier-herein .18s ease-out;
+}
+
+@keyframes schleier-herein { from { opacity: 0; } to { opacity: 1; } }
+
+.dlg__blatt {
+  width: 100%;
+  max-width: var(--band);
+  max-height: min(94dvh, 100%);
+  display: flex;
+  flex-direction: column;
+  background: var(--flaeche);
+  color: var(--tinte);
+  border-radius: var(--radius-blatt) var(--radius-blatt) 0 0;
+  box-shadow: var(--schatten-hoch);
+  animation: blatt-herein .26s cubic-bezier(.2, .8, .2, 1);
+}
+
+@keyframes blatt-herein {
+  from { transform: translateY(100%); }
+  to   { transform: none; }
+}
+
+.dlg__kopf {
+  flex: none;
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 12px 10px 20px;
+  border-bottom: 1px solid var(--kante);
+}
+
+.dlg__kopf h2 {
+  font-size: 19px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+/* Der Griff ist reine Gebärdensprache: er sagt "das hier ist ein Blatt,
+   das von unten kommt". Er tut nichts – gezogen wird nicht, weil ein
+   halb geschlossener Dialog niemandem hilft. */
+.dlg__griff {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--kante-stark);
+  opacity: .55;
+}
+
+.dlg__zu {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--tinte);
+  transition: background-color .15s;
+}
+
+.dlg__zu:hover { background: var(--akzent-leise); }
+
+.dlg__inhalt {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px 20px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  /*
+    Die Schriftgröße für den Fließtext steht auf dem BEHÄLTER und nicht auf
+    ".dlg__inhalt p". Der Grund steckt in der Spezifität: ".dlg__inhalt p"
+    hat einen Selektor mehr als ".notiz" oder ".ende__zeit" und hat im ersten
+    Bild beide überstimmt – die kleinen Hinweise waren so groß wie der
+    Haupttext und die Endzeit, die 30 px haben sollte, war 15 px groß. Geerbt
+    wird nur, was nichts Eigenes hat, und das ist genau richtig.
+  */
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.dlg__inhalt--mitte { align-items: center; text-align: center; }
+
+.dlg__kern {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.dlg__untertitel {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--tinte-leise);
+  margin-top: 6px;
+}
+
+.dlg__fuss {
+  flex: none;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 20px calc(16px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--kante);
+}
+
+.dlg__fuss--zwei > .knopf { flex: 1 1 auto; }
+.dlg__fuss > .knopf--voll { min-width: 44%; }
+
+.feldgruppe { display: flex; flex-direction: column; gap: 6px; }
+.feldgruppe__titel { font-size: 14px; font-weight: 700; }
+
+.notiz {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--tinte-leise);
+}
+
+.notiz--welt { font-weight: 600; color: var(--tinte); }
+
+.liste { padding-left: 20px; display: flex; flex-direction: column; gap: 8px; }
+.liste li { font-size: 15px; line-height: 1.5; }
+
+.verweis { color: var(--verweis-farbe); text-underline-offset: 3px; }
+
+/* Das Beispielbild im Regeln-Dialog. Es holt seine Farben aus denselben
+   Marken wie das Brett, also sieht es in jedem Stil und in jedem
+   Farbschema so aus wie das Spiel daneben. */
+/*
+  aspect-ratio steht hier ausdrücklich, obwohl das viewBox-Verhältnis
+  dasselbe sagt. Im ersten Bild war das Bild 300 px breit und NULL Pixel
+  hoch: als Flex-Element in einer Spalte ist die Hauptachse die Höhe, und
+  "height: auto" holt sich dort die Inhaltsgröße – ein SVG ohne
+  height-Attribut hat da nichts anzubieten. Mit dem Verhältnis und
+  flex: none rechnet der Browser die Höhe aus der Breite.
+*/
+.beispiel {
+  display: block;
+  flex: none;
+  width: 100%;
+  max-width: 300px;
+  aspect-ratio: 240 / 180;
+  height: auto;
+  margin: 4px auto 8px;
+}
+
+.beispiel__flaeche--a { fill: var(--f0); }
+.beispiel__flaeche--b { fill: var(--f1); }
+.beispiel__flaeche--c { fill: var(--f2); }
+.beispiel__flaeche--d { fill: var(--f4); }
+
+.beispiel__raster { fill: none; stroke: var(--hilfslinie); stroke-width: 1.5; }
+.beispiel__kante { fill: none; stroke: var(--rahmen-farbe); stroke-width: 4; }
+
+.beispiel__plaettchen { fill: var(--zahl-grund); stroke: var(--zahl-kante); stroke-width: 1; }
+
+.beispiel__zahl {
+  fill: var(--zahl-tinte);
+  font-family: var(--schrift-zahl);
+  font-size: 26px;
+  font-weight: var(--zahl-gewicht);
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.ende__pokal { width: 52px; height: 52px; fill: var(--akzent); }
+.ende__zeit { font-size: 30px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.ende__text { color: var(--tinte-leise); }
+.ende__rang { font-weight: 700; }
+.ende__rang:empty { display: none; }
+.ende__text:empty { display: none; }
+
+/* -------------------------------------------------------------------------
+   7. Rücksichten
+   ------------------------------------------------------------------------- */
+
+/*
+  Ein sichtbarer Fokusring, überall und in derselben Form. Das Spiel ist
+  ganz mit der Tastatur bedienbar, und ein weggestalteter Fokus macht daraus
+  ein Ratespiel. :focus-visible statt :focus, damit ein Mauszeiger keine
+  Ringe hinterlässt.
+*/
+:focus-visible {
+  outline: 3px solid var(--fokus);
+  outline-offset: 2px;
+}
+
+.brett:focus-visible { outline-offset: 4px; }
+
+/*
+  Wer weniger Bewegung eingestellt hat, bekommt keine. Nicht "weniger",
+  sondern keine: die Übergänge hier sind Beiwerk, nichts erklärt sich durch
+  sie, und für manche Menschen sind sie der Grund, ein Spiel wieder
+  zuzumachen.
+
+  Warum 0,001 ms und nicht 0 s: bei einer Dauer von 0 feuert der Browser
+  weder transitionend noch animationend. Wartet app.js irgendwo auf eines
+  von beiden – und ein Aufräumen nach dem Einblenden einer Fläche ist
+  genau so gebaut –, dann bleibt das Spiel bei Dauer 0 hängen. Sichtbar ist
+  eine Millionstelsekunde nicht, gefeuert wird trotzdem.
+*/
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Kleine Schirme in der Höhe (Landschaft, ältere Telefone): das Brett soll
+   nicht als Erstes verlieren, also wird ringsum gespart. */
+@media (max-height: 720px) {
+  :root { --chrom: 226px; }
+  .kopf { padding: 4px 10px 2px; }
+  .kopf__untertitel { display: none; }
+  .hud { padding: 2px 12px 6px; }
+  .karte { padding: 6px 6px 5px; }
+  .karte__wert { font-size: 19px; }
+  .werkzeug { min-height: 52px; }
+  /*
+    Die Meldung rückt an die Leiste heran und wird breiter.
+    Auf einem kurzen Schirm ist der freie Streifen unter dem Brett schmal,
+    und jede Zeile, die die Meldung mehr braucht, deckt eine Zellreihe zu.
+    Sie darf hier also die ganze Bandbreite nehmen: in der Querlage ist das
+    Brett von der Höhe begrenzt und lässt links und rechts Platz übrig, den
+    sonst niemand benutzt – und einzeilig statt dreizeilig deckt sie zwei
+    Reihen weniger zu.
+  */
+  .hinweis {
+    bottom: calc(68px + env(safe-area-inset-bottom));
+    max-width: min(94vw, 620px);
+    font-size: 13px;
+    padding: 8px 14px;
+  }
+}
+
+@media (max-height: 560px) {
+  /*
+    206 und nicht 190: nachgemessen, nicht geschätzt.
+    Kopf 71 + Kärtchen 62 + Ränder des Feldes 12 + Leiste 60 = 205 px, und
+    mit 190 war das Brett genau die fehlenden 15 px zu hoch – die Seite lief
+    unten über und der untere Rand der Werkzeugleiste stand außerhalb des
+    Fensters. Auf einem Telefon in der Querlage (844 x 390) trifft das
+    zuverlässig zu, weil das Brett dort von der HÖHE begrenzt ist und sich
+    also alles nimmt, was --chrom ihm lässt. Ein Pixel Luft ist Absicht.
+  */
+  :root { --chrom: 206px; }
+  .karte__notiz { display: none; }
+  .werkzeug__text { display: none; }
+  .werkzeug { min-height: 48px; }
+  .hinweis { bottom: calc(64px + env(safe-area-inset-bottom)); }
+}
+
+/* Hohe Schirme: der Platz, den das Brett nicht brauchen kann (es ist von der
+   Breite begrenzt), geht an Kärtchen und Werkzeuge. Nicht damit es voller
+   wird, sondern damit die Berührziele größer sind – 66 px für ein Werkzeug
+   trifft man auch im Gehen. */
+@media (min-height: 820px) {
+  :root { --chrom: 286px; }
+  .kopf { padding: 14px 12px 4px; }
+  .kopf__titel { font-size: 23px; }
+  .hud { padding: 6px 12px 10px; }
+  .karte { padding: 11px 6px 10px; }
+  .karte__wert { font-size: 23px; }
+  .feld { padding: 8px 12px 10px; }
+  .leiste { padding: 6px 12px calc(12px + env(safe-area-inset-bottom)); }
+  .werkzeug { min-height: 66px; }
+  .werkzeug .symbol { width: 24px; height: 24px; }
+  .werkzeug__text { font-size: 12px; }
+}
+
+/*
+  Breite Schirme: dasselbe Spiel, nur größer. Kein zweispaltiges Layout –
+  ein Brett neben einer Seitenleiste sieht aus wie ein Verwaltungsprogramm,
+  und die Werkzeuge wären dann nicht mehr da, wo die Hand ist. Das Band
+  wächst, die Schrift wächst mit, und der Rest bleibt, wie er ist.
+
+  --chrom ist hier mit Absicht großzügig: es ist die Höhe, die NICHT dem
+  Brett gehört, und wenn sie zu klein angesetzt ist, wird das Brett zu groß
+  und die Seite läuft unten über. Gemessen waren es 269 px – bei 270 stand
+  die Werkzeugleiste 12 px unter dem Fensterrand.
+*/
+@media (min-width: 720px) and (min-height: 720px) {
+  :root {
+    --band: 640px;
+    /*
+      344 statt 310: die 34 px Unterschied sind der Streifen, in dem die
+      Meldung steht.
+
+      Auf dem Telefon ist das Brett von der BREITE begrenzt, und über der
+      Leiste bleibt Höhe übrig, die niemand braucht – dort liegt die Meldung
+      und deckt nichts zu. Auf einem breiten Schirm ist das Brett von der
+      HÖHE begrenzt, es nimmt sich alles, was --chrom ihm lässt, und dann
+      reichte die Meldung 30 px über den unteren Brettrand: drei Sekunden
+      lang war die unterste Zellreihe verdeckt (und vor
+      `pointer-events: none` sogar unbedienbar). Also gehört der Streifen
+      nicht dem Brett, sondern der Meldung – gemessen an der zweizeiligen
+      Meldung, die es wirklich gibt ("Die Partie ist gespeichert …").
+    */
+    --chrom: 344px;
+  }
+  body { font-size: 16px; }
+  .kopf { padding: 14px 14px 6px; }
+  .kopf__titel { font-size: 26px; }
+  .kopf__untertitel { font-size: 13px; }
+  /*
+    margin-top: 0 – der übrige Vorrat an Höhe geht hier NICHT mehr zur
+    Hälfte über die Kärtchen (siehe den Kommentar bei .hud): auf dem Telefon
+    rückt das den Block in Daumenreichweite, auf einem Schirm mit Maus gibt
+    es keinen Daumen, und die halbe Lücke unter dem Brett wäre gerade die,
+    in der die Meldung stehen soll. Oben angeschlagen, unten der Streifen –
+    das ist die Aufteilung, die zu einem breiten Fenster passt.
+  */
+  .hud { margin-top: 0; padding: 6px 16px 10px; gap: 10px; }
+  .karte__wert { font-size: 24px; }
+  .feld { padding: 8px 16px 12px; }
+  .leiste { padding: 6px 16px calc(14px + env(safe-area-inset-bottom)); gap: 8px; }
+  .werkzeug { min-height: 62px; }
+  .werkzeug__text { font-size: 12px; }
+  .werkzeug .symbol { width: 24px; height: 24px; }
+  /*
+    Breiter, damit die längsten Meldungen einzeilig bleiben: bei 420 px
+    brach "Die Partie ist gespeichert – beim nächsten Start ist sie wieder
+    da." auf zwei Zeilen um, und zwei Zeilen brauchen 58 px statt 39.
+  */
+  .hinweis {
+    bottom: calc(100px + env(safe-area-inset-bottom));
+    max-width: min(92vw, 560px);
+  }
+}

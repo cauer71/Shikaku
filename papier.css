@@ -1,0 +1,305 @@
+/* =========================================================================
+   Shikaku – Skin "Papier"
+
+   Für das lange Spiel. Ein Rätsel auf Stufe "Experte" dauert eine halbe
+   Stunde, und eine halbe Stunde reines Weiß mit schwarzen Linien ist
+   anstrengend – Mondrian ist ein Auftritt, kein Sessel. Also: warmes
+   Papier, Bleistiftlinien, pastellige Flächen, gerundete Ecken. Ruhig,
+   kontrastarm im Gefühl, aber nie unter WCAG AA im Text: die weichen Töne
+   liegen alle auf FLÄCHEN, nicht unter Buchstaben.
+
+   Zwei Entscheidungen, die man sehen kann:
+
+   1. Die Flächen sind gerundet (--radius-teil), und zwar ausdrücklich
+      obwohl dadurch an jeder Stoßkante der Papierton durchscheint. Genau das
+      ist gewollt: auf Papier zeichnet man Kästen nach, sie stoßen nie
+      haargenau aneinander, und dieses Nichts zwischen den Flächen ist der
+      Unterschied zwischen einem Blatt und einer Tabelle.
+
+   2. Die Linien sind halbdurchsichtig und nicht grau gemischt. Ein
+      gemischtes Grau wäre auf dem Papierton eine schmutzige Fläche;
+      Bleistift auf Papier ist durchscheinend, und der Papierton soll durch
+      die Linie noch zu sehen sein.
+
+   Im Dunkeln wird aus dem Blatt ein Notizbuch bei Nacht: tiefes Braun-
+   Anthrazit, Tinte in Elfenbein, dieselben Flächen nur gedämpft.
+   ========================================================================= */
+
+:root {
+  --grund: #f8f3e7;
+  --grund-rand: #ebe2ce;
+  --tinte: #2f2a22;
+  --tinte-leise: #6a6154;
+  --tinte-aus: #67604f;
+
+  --flaeche: #fffdf6;
+  --flaeche-2: #f2ecdd;
+  --kante: rgba(70, 60, 44, .20);
+  /*
+    .58 und nicht .48 – nachgerechnet, nicht geschätzt.
+
+    --kante-stark ist die Umrisslinie bedienbarer Dinge: der Rand des
+    Schalters, des Kürzelfelds, des umrandeten Knopfes. WCAG 1.4.11
+    verlangt für den Umriss eines Bauteils 3:1 gegen den Grund, und bei
+    .48 waren es auf --flaeche 2,54:1. Beim Schalter war das kein
+    theoretischer Mangel: seine Bahn liegt bei 1,34:1 zum Papierton, der
+    Rand ist also das Einzige, woran man das Ding überhaupt als Schalter
+    erkennt. Mit .58 sind es 3,2:1.
+  */
+  --kante-stark: rgba(70, 60, 44, .58);
+
+  --brett-grund: #fffdf6;
+  /*
+    .60 und nicht .34. Die Rasterlinien sind in diesem Spiel kein Zierrat,
+    sondern der Inhalt: wer eine 12 legen will, muss die zwölf Kästchen
+    abzählen können. Damit fallen sie unter WCAG 1.4.11 ("graphical
+    objects required to understand the content") und brauchen 3:1. Bei
+    .34 waren es 1,86:1 – der Bleistift war so leise, dass auf 12×12
+    nichts mehr zu zählen war. Bei .60 sind es 3,35:1, und weil die Linie
+    weiterhin halbdurchsichtig ist, scheint der Papierton durch sie
+    hindurch (siehe Punkt 2 oben).
+  */
+  --linie: rgba(70, 62, 48, .60);
+  --linie-dicke: 1px;
+  --hilfslinie: rgba(70, 62, 48, .22);
+  --rahmen: 2px;
+  --rahmen-farbe: rgba(70, 62, 48, .50);
+  --radius-teil: 9px;
+  --teil-kante: 1px;
+
+  --zahl-grund: #fffdf6;
+  --zahl-tinte: #2f2a22;
+  --zahl-kante: rgba(70, 62, 48, .30);
+
+  /* Buntstifte, keine Druckfarben: alle fünf so hell, dass das Plättchen
+     mit der Zahl darauf noch heller ist und sich abhebt. */
+  --f0: #f6d3cf;
+  --f1: #cfe0ef;
+  --f2: #f4e6b8;
+  --f3: #d9e6d4;
+  --f4: #e2d8ef;
+
+  --gut: #2e7a55;
+  --gut-flaeche: rgba(46, 122, 85, .18);
+  --fehler: #a63a2e;
+  --fehler-flaeche: rgba(166, 58, 46, .14);
+  --fehler-strich: rgba(166, 58, 46, .52);
+  --tippfarbe: #2a6099;
+  --tipp-flaeche: rgba(42, 96, 153, .16);
+  --gewaehlt: #4a4235;
+
+  --akzent: #3f5468;
+  --akzent-tinte: #fffdf6;
+  --akzent-leise: rgba(70, 60, 44, .08);
+  --verweis-farbe: #2a6099;
+
+  --schalter-aus: #e3dcc9;
+  --schalter-knopf: #fffdf6;
+
+  --hinweis-grund: #33302a;
+  --hinweis-tinte: #f8f3e7;
+
+  --fokus: #2a6099;
+  --schleier: rgba(47, 42, 34, .48);
+
+  --radius: 18px;
+  --radius-klein: 7px;
+  --radius-blatt: 26px;
+  --schatten: 0 1px 3px rgba(90, 74, 48, .14);
+  --schatten-hoch: 0 -10px 40px rgba(90, 74, 48, .26);
+
+  /* Runde Systemschriften: auf einem Apfel gibt es die gerundete Variante
+     wirklich, überall sonst fällt es auf die Systemschrift zurück. */
+  --schrift: ui-rounded, 'SF Pro Rounded', system-ui, -apple-system,
+             'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --schrift-zahl: ui-rounded, 'SF Pro Rounded', 'Avenir Next', system-ui,
+                  -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  --zahl-gewicht: 700;
+  --zahl-sperrung: 0;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --grund: #1d1b17;
+    --grund-rand: #131210;
+    --tinte: #f1ebdd;
+    --tinte-leise: #bdb4a3;
+    --tinte-aus: #a29985;
+
+    --flaeche: #26231e;
+    --flaeche-2: #2f2b25;
+    --kante: rgba(241, 235, 221, .17);
+    --kante-stark: rgba(241, 235, 221, .44);
+
+    --brett-grund: #221f1a;
+    /* .42 statt .30: nachgerechnet 3,5:1 statt 2,48:1 gegen den Brettgrund –
+       die Rasterlinie ist Inhalt und braucht nach WCAG 1.4.11 3:1. */
+    --linie: rgba(241, 235, 221, .42);
+    --hilfslinie: rgba(241, 235, 221, .18);
+    --rahmen-farbe: rgba(241, 235, 221, .46);
+
+    --zahl-grund: #efe8da;
+    --zahl-tinte: #221f1a;
+    --zahl-kante: rgba(0, 0, 0, .42);
+
+    --f0: #5b3b3a;
+    --f1: #33465c;
+    --f2: #5c5033;
+    --f3: #354a3c;
+    --f4: #45395c;
+
+    --gut: #86d3a6;
+    --gut-flaeche: rgba(134, 211, 166, .20);
+    --fehler: #ffa294;
+    --fehler-flaeche: rgba(255, 162, 148, .16);
+    --fehler-strich: rgba(255, 162, 148, .52);
+    --tippfarbe: #9dc0ee;
+    --tipp-flaeche: rgba(157, 192, 238, .20);
+    --gewaehlt: #f1ebdd;
+
+    --akzent: #efe8da;
+    --akzent-tinte: #221f1a;
+    --akzent-leise: rgba(241, 235, 221, .10);
+    --verweis-farbe: #9dc0ee;
+
+    --schalter-aus: #3b372f;
+    --schalter-knopf: #efe8da;
+
+    --hinweis-grund: #efe8da;
+    --hinweis-tinte: #221f1a;
+
+    --fokus: #9dc0ee;
+    --schleier: rgba(0, 0, 0, .60);
+
+    --schatten: 0 1px 3px rgba(0, 0, 0, .45);
+    --schatten-hoch: 0 -10px 40px rgba(0, 0, 0, .58);
+
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --grund: #1d1b17;
+  --grund-rand: #131210;
+  --tinte: #f1ebdd;
+  --tinte-leise: #bdb4a3;
+  --tinte-aus: #a29985;
+
+  --flaeche: #26231e;
+  --flaeche-2: #2f2b25;
+  --kante: rgba(241, 235, 221, .17);
+  --kante-stark: rgba(241, 235, 221, .44);
+
+  --brett-grund: #221f1a;
+  /* .42 statt .30: nachgerechnet 3,5:1 statt 2,48:1 gegen den Brettgrund –
+     die Rasterlinie ist Inhalt und braucht nach WCAG 1.4.11 3:1. */
+  --linie: rgba(241, 235, 221, .42);
+  --hilfslinie: rgba(241, 235, 221, .18);
+  --rahmen-farbe: rgba(241, 235, 221, .46);
+
+  --zahl-grund: #efe8da;
+  --zahl-tinte: #221f1a;
+  --zahl-kante: rgba(0, 0, 0, .42);
+
+  --f0: #5b3b3a;
+  --f1: #33465c;
+  --f2: #5c5033;
+  --f3: #354a3c;
+  --f4: #45395c;
+
+  --gut: #86d3a6;
+  --gut-flaeche: rgba(134, 211, 166, .20);
+  --fehler: #ffa294;
+  --fehler-flaeche: rgba(255, 162, 148, .16);
+  --fehler-strich: rgba(255, 162, 148, .52);
+  --tippfarbe: #9dc0ee;
+  --tipp-flaeche: rgba(157, 192, 238, .20);
+  --gewaehlt: #f1ebdd;
+
+  --akzent: #efe8da;
+  --akzent-tinte: #221f1a;
+  --akzent-leise: rgba(241, 235, 221, .10);
+  --verweis-farbe: #9dc0ee;
+
+  --schalter-aus: #3b372f;
+  --schalter-knopf: #efe8da;
+
+  --hinweis-grund: #efe8da;
+  --hinweis-tinte: #221f1a;
+
+  --fokus: #9dc0ee;
+  --schleier: rgba(0, 0, 0, .60);
+
+  --schatten: 0 1px 3px rgba(0, 0, 0, .45);
+  --schatten-hoch: 0 -10px 40px rgba(0, 0, 0, .58);
+
+  color-scheme: dark;
+}
+
+/* --- Der Papierton --------------------------------------------------------
+
+   Ein Blatt ist nicht überall gleich hell. Zwei sehr weite, sehr blasse
+   Kreise geben dem Grund eine Richtung, ohne dass man sie als Verlauf
+   erkennt. Sie liegen auf html und nicht auf body: body ist nur das Band,
+   und der Ton soll bis an den Rand des Schirms gehen.
+   ------------------------------------------------------------------------- */
+
+html {
+  background-image:
+    radial-gradient(60vmax 60vmax at 15% -5%, rgba(255, 255, 255, .55), transparent 62%),
+    radial-gradient(50vmax 50vmax at 95% 105%, rgba(158, 132, 92, .16), transparent 60%);
+  background-attachment: fixed;
+}
+
+body {
+  /* Das Band ist das Blatt: heller als der Tisch, mit einer angedeuteten
+     Kante. Auf dem Telefon fällt beides zusammen, dort ist der Schirm das
+     Blatt – die Kante sieht man erst, wenn daneben Platz ist. */
+  box-shadow: 0 0 0 1px var(--kante);
+}
+
+.kopf__titel { letter-spacing: .02em; font-weight: 700; }
+
+/* --- Das Brett ------------------------------------------------------------ */
+
+.brett {
+  --brett-radius: 16px;
+  --brett-schatten: 0 2px 14px rgba(90, 74, 48, .16);
+}
+
+/* Der Rahmen ist auf Papier keine Fassung, sondern ein nachgezogener Kasten:
+   dünn, in Bleistiftfarbe, mit weichen Ecken. */
+.brett::after { border-radius: 16px; }
+
+.zahl { box-shadow: 0 0 0 1px var(--zahl-kante), 0 1px 2px rgba(90, 74, 48, .14); }
+
+/* Eine gewählte Fläche wird umkringelt, nicht umrahmt: der Innenrand ist
+   weich und liegt innerhalb der runden Ecke. */
+.teil--gewaehlt { box-shadow: inset 0 0 0 3px var(--gewaehlt); }
+
+/* --- Bauteile ------------------------------------------------------------ */
+
+.karte { border-radius: var(--radius); }
+
+.werkzeug { border-radius: 16px; }
+
+.wahl__option, .reiter { border-width: 1px; }
+
+.stufe { border-radius: var(--radius); border-width: 1px; }
+
+.dlg__blatt { border-radius: var(--radius-blatt) var(--radius-blatt) 0 0; }
+
+.dlg__griff { opacity: .4; }
+
+/* --- Breite Schirme ------------------------------------------------------- */
+
+@media (min-width: 1000px) {
+  body {
+    /* Auf dem Tisch liegt das Blatt und wirft einen Schatten. Mehr braucht
+       dieser Stil nicht – eine Komposition am Rand wie im Mondrian-Stil wäre
+       hier genau die Unruhe, die er vermeiden soll. */
+    box-shadow: 0 0 0 1px var(--kante), 0 18px 60px rgba(90, 74, 48, .22);
+  }
+}

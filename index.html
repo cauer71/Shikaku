@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Shikaku – Das Rechteck-Rätsel</title>
+<meta name="description" content="Zerlege das Raster in Rechtecke: in jedem steht genau eine Zahl, und die Zahl ist seine Fläche. Das japanische Rätsel von Nikoli, fürs Smartphone.">
+<!-- Zwei theme-color-Angaben statt einer: die Statusleiste soll dieselbe
+     Farbe haben wie der Grund des Bretts, und der ist hell oder dunkel. -->
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#17181a" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Shikaku">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="Shikaku">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="icon" href="icons/icon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+
+<!--
+  Die Reihenfolge der Stilblätter ist kein Zufall. basis.css steht zuerst und
+  bringt Aufbau, Bauteile und einen vollständigen Satz Standardfarben mit; die
+  drei Skins überschreiben danach nur noch Farben und Kanten. Und der
+  Standard-Skin "mondrian" kommt ZULETZT: schaltet der Schnipsel unten nicht
+  (kein Skript, alter Browser), gewinnt die Kaskade – und dann steht genau der
+  Stil da, der gemeint ist, statt eines beliebigen.
+-->
+<link rel="stylesheet" href="basis.css">
+<link rel="stylesheet" href="m3-farben.css" id="css-m3-farben">
+<link rel="stylesheet" href="m3.css" id="css-m3">
+<link rel="stylesheet" href="papier.css" id="css-papier">
+<link rel="stylesheet" href="mondrian.css" id="css-mondrian">
+<script>
+  /*
+    Skin, Farbschema, Sprache und Manifest werden hier gesetzt – vor dem
+    ersten Bild. Wer das in app.js macht, sieht beim Start einen Lidschlag
+    den falschen Stil aufblitzen, weil das Modul erst nach dem Aufbau des
+    Dokuments läuft. Deshalb steht hier ausnahmsweise klassisches Skript
+    ohne Modul und ohne Abhängigkeit.
+  */
+  (function () {
+    var einst = { skin: 'mondrian', thema: 'auto' };
+    try { Object.assign(einst, JSON.parse(localStorage.getItem('sk.einst.v1') || '{}')); } catch (e) {}
+
+    var bekannteSkins = { mondrian: 1, papier: 1, m3: 1 };
+    var skin = bekannteSkins[einst.skin] ? einst.skin : 'mondrian';
+    document.documentElement.dataset.skin = skin;
+
+    /*
+      lang steuert Trennung und Anführungszeichen und darf nach dem ersten
+      Bild nicht springen. Die Auswahl ist dieselbe wie in i18n.js
+      (erkenneSprache), hier aber absichtlich noch einmal in fünf Zeilen
+      nachgebaut: das Modul zu laden, nur um ein Attribut zu setzen, würde
+      genau den Lidschlag zurückbringen, den dieser Schnipsel verhindert.
+    */
+    var sprachen = { de: 1, it: 1, en: 1 };
+    var wunsch = sprachen[einst.sprache] ? einst.sprache : null;
+    if (!wunsch) {
+      var liste = navigator.languages || [navigator.language || 'de'];
+      for (var i = 0; i < liste.length; i++) {
+        var kurz = String(liste[i] || '').toLowerCase().split('-')[0];
+        if (sprachen[kurz]) { wunsch = kurz; break; }
+      }
+    }
+    document.documentElement.lang = wunsch || 'de';
+
+    // Das Manifest gibt es je Sprache; der Browser liest genau das, worauf
+    // der Verweis zeigt. Also hier schon umhängen und nicht erst in app.js –
+    // ein Installationsdialog kann vorher aufgehen.
+    var mf = document.querySelector('link[rel="manifest"]');
+    if (mf) mf.href = 'manifest.' + (wunsch || 'de') + '.webmanifest';
+
+    document.getElementById('css-mondrian').disabled = skin !== 'mondrian';
+    document.getElementById('css-papier').disabled = skin !== 'papier';
+    document.getElementById('css-m3').disabled = skin !== 'm3';
+    document.getElementById('css-m3-farben').disabled = skin !== 'm3';
+
+    // "auto" setzt gar kein Attribut und folgt damit prefers-color-scheme.
+    // Nur eine bewusste Wahl schreibt data-theme – und gewinnt dann in beide
+    // Richtungen, auch gegen ein dunkel gestelltes System.
+    if (einst.thema === 'hell' || einst.thema === 'light') document.documentElement.dataset.theme = 'light';
+    if (einst.thema === 'dunkel' || einst.thema === 'dark') document.documentElement.dataset.theme = 'dark';
+
+    // Hilfslinien sind ein reiner Darstellungsschalter; damit sie schon beim
+    // ersten Bild stimmen, steht er hier und nicht erst in app.js.
+    document.documentElement.dataset.hilfslinien = einst.hilfslinien === false ? 'aus' : 'an';
+  })();
+</script>
+</head>
+<body>
+
+<!--
+  Die Symbole liegen als Sprite im Dokument, nicht in einer eigenen Datei und
+  nicht in einer Icon-Schrift: eine externe Datei wäre eine zweite Anfrage vor
+  dem ersten Bild, eine Icon-Schrift zeigt bis zum Laden Ersatzkästchen und
+  verträgt sich schlecht mit Vorlesehilfen. So sind die Symbole da, sobald das
+  Dokument da ist.
+
+  Die geschlossenen Formen stammen aus Material Symbols (Rounded, Apache 2.0);
+  "vor" ist das gespiegelte "zurueck" – dieselbe Form, damit die beiden
+  Knöpfe als Paar zu erkennen sind.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="i-regeln" viewBox="0 -960 960 960" fill="currentColor"><path d="M478-240q21 0 35.5-14.5T528-290q0-21-14.5-35.5T478-340q-21 0-35.5 14.5T428-290q0 21 14.5 35.5T478-240Zm2 160q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Zm4-172q25 0 43.5 16t18.5 40q0 22-13.5 39T502-525q-23 20-40.5 44T444-427q0 14 10.5 23.5T479-394q15 0 25.5-10t13.5-25q4-21 18-37.5t30-31.5q23-22 39.5-48t16.5-58q0-51-41.5-83.5T484-720q-38 0-72.5 16T359-655q-7 12-4.5 25.5T368-609q14 8 29 5t25-17q11-15 27.5-23t34.5-8Z"/></symbol>
+  <symbol id="i-einstellungen" viewBox="0 -960 960 960" fill="currentColor"><path d="M433-80q-27 0-46.5-18T363-142l-9-66q-13-5-24.5-12T307-235l-62 26q-25 11-50 2t-39-32l-47-82q-14-23-8-49t27-43l53-40q-1-7-1-13.5v-27q0-6.5 1-13.5l-53-40q-21-17-27-43t8-49l47-82q14-23 39-32t50 2l62 26q11-8 23-15t24-12l9-66q4-26 23.5-44t46.5-18h94q27 0 46.5 18t23.5 44l9 66q13 5 24.5 12t22.5 15l62-26q25-11 50-2t39 32l47 82q14 23 8 49t-27 43l-53 40q1 7 1 13.5v27q0 6.5-2 13.5l53 40q21 17 27 43t-8 49l-48 82q-14 23-39 32t-50-2l-60-26q-11 8-23 15t-24 12l-9 66q-4 26-23.5 44T527-80h-94Zm7-80h79l14-106q31-8 57.5-23.5T639-327l99 41 39-68-86-65q5-14 7-29.5t2-31.5q0-16-2-31.5t-7-29.5l86-65-39-68-99 42q-22-23-48.5-38.5T533-694l-13-106h-79l-14 106q-31 8-57.5 23.5T321-633l-99-41-39 68 86 64q-5 15-7 30t-2 32q0 16 2 31t7 30l-86 65 39 68 99-42q22 23 48.5 38.5T427-266l13 106Zm42-180q58 0 99-41t41-99q0-58-41-99t-99-41q-59 0-99.5 41T342-480q0 58 40.5 99t99.5 41Zm-2-140Z"/></symbol>
+  <symbol id="i-zurueck" viewBox="0 -960 960 960" fill="currentColor"><path d="M320-200q-17 0-28.5-11.5T280-240q0-17 11.5-28.5T320-280h244q63 0 109.5-40T720-420q0-60-46.5-100T564-560H312l76 76q11 11 11 28t-11 28q-11 11-28 11t-28-11L188-572q-6-6-8.5-13t-2.5-15q0-8 2.5-15t8.5-13l144-144q11-11 28-11t28 11q11 11 11 28t-11 28l-76 76h252q97 0 166.5 63T800-420q0 94-69.5 157T564-200H320Z"/></symbol>
+  <symbol id="i-vor" viewBox="0 -960 960 960" fill="currentColor"><path transform="matrix(-1 0 0 1 960 0)" d="M320-200q-17 0-28.5-11.5T280-240q0-17 11.5-28.5T320-280h244q63 0 109.5-40T720-420q0-60-46.5-100T564-560H312l76 76q11 11 11 28t-11 28q-11 11-28 11t-28-11L188-572q-6-6-8.5-13t-2.5-15q0-8 2.5-15t8.5-13l144-144q11-11 28-11t28 11q11 11 11 28t-11 28l-76 76h252q97 0 166.5 63T800-420q0 94-69.5 157T564-200H320Z"/></symbol>
+  <symbol id="i-tipp" viewBox="0 -960 960 960" fill="currentColor"><path d="M480-80q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM360-200q-17 0-28.5-11.5T320-240q0-17 11.5-28.5T360-280h240q17 0 28.5 11.5T640-240q0 17-11.5 28.5T600-200H360Zm-30-120q-69-41-109.5-110T180-580q0-125 87.5-212.5T480-880q125 0 212.5 87.5T780-580q0 81-40.5 150T630-320H330Zm24-80h252q45-32 69.5-79T700-580q0-92-64-156t-156-64q-92 0-156 64t-64 156q0 54 24.5 101t69.5 79Zm126 0Z"/></symbol>
+  <symbol id="i-leeren" viewBox="0 -960 960 960" fill="currentColor"><path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40q-17 0-28.5-11.5T120-760q0-17 11.5-28.5T160-800h160v-40q0-17 11.5-28.5T360-880h240q17 0 28.5 11.5T640-840v40h160q17 0 28.5 11.5T840-760q0 17-11.5 28.5T800-720h-40v520q0 33-23.5 56.5T680-120H280Zm0-600v520h400v-520H280Zm80 400q0 17 11.5 28.5T400-280q17 0 28.5-11.5T440-320v-240q0-17-11.5-28.5T400-600q-17 0-28.5 11.5T360-560v240Zm160 0q0 17 11.5 28.5T560-280q17 0 28.5-11.5T600-320v-240q0-17-11.5-28.5T560-600q-17 0-28.5 11.5T520-560v240Z"/></symbol>
+  <symbol id="i-neu" viewBox="0 -960 960 960" fill="currentColor"><path d="M480-160q-134 0-227-93t-93-227q0-134 93-227t227-93q69 0 132 28.5T720-690v-70q0-17 11.5-28.5T760-800q17 0 28.5 11.5T800-760v200q0 17-11.5 28.5T760-520H560q-17 0-28.5-11.5T520-560q0-17 11.5-28.5T560-600h128q-32-56-87.5-88T480-720q-100 0-170 70t-70 170q0 100 70 170t170 70q68 0 124.5-34.5T692-367q8-14 22.5-19.5t29.5-.5q16 5 23 21t-1 30q-41 80-117 128t-169 48Z"/></symbol>
+  <symbol id="i-zu" viewBox="0 -960 960 960" fill="currentColor"><path d="M480-424 284-228q-11 11-28 11t-28-11q-11-11-11-28t11-28l196-196-196-196q-11-11-11-28t11-28q11-11 28-11t28 11l196 196 196-196q11-11 28-11t28 11q11 11 11 28t-11 28L536-480l196 196q11 11 11 28t-11 28q-11 11-28 11t-28-11L480-424Z"/></symbol>
+  <symbol id="i-haken" viewBox="0 -960 960 960" fill="currentColor"><path d="m382-354 339-339q12-12 28-12t28 12q12 12 12 28.5T777-636L410-268q-12 12-28 12t-28-12L182-440q-12-12-11.5-28.5T183-497q12-12 28.5-12t28.5 12l142 143Z"/></symbol>
+  <symbol id="i-pokal" viewBox="0 -960 960 960" fill="currentColor"><path d="M440-200v-124q-49-11-87.5-41.5T296-442q-75-9-125.5-65.5T120-640v-40q0-33 23.5-56.5T200-760h80q0-33 23.5-56.5T360-840h240q33 0 56.5 23.5T680-760h80q33 0 56.5 23.5T840-680v40q0 76-50.5 132.5T664-442q-18 46-56.5 76.5T520-324v124h120q17 0 28.5 11.5T680-160q0 17-11.5 28.5T640-120H320q-17 0-28.5-11.5T280-160q0-17 11.5-28.5T320-200h120ZM280-528v-152h-80v40q0 38 22 68.5t58 43.5Zm200 128q50 0 85-35t35-85v-240H360v240q0 50 35 85t85 35Zm200-128q36-13 58-43.5t22-68.5v-40h-80v152Zm-200-52Z"/></symbol>
+</svg>
+
+<header class="kopf">
+  <button class="symbolknopf" id="btn-regeln" type="button"
+          data-i18n-aria="a11y.regeln" aria-label="Spielregeln"
+          data-i18n-titel="regeln.titel" title="So wird gespielt">
+    <svg class="symbol" aria-hidden="true"><use href="#i-regeln"></use></svg>
+  </button>
+  <h1 class="kopf__titel" data-i18n="app.titel">Shikaku</h1>
+  <!-- Der Untertitel steht als eigenes Kind in der zweiten Rasterzeile und
+       nicht im <h1>: `anwenden` schreibt den ganzen Textinhalt eines Feldes
+       neu, ein Untertitel innerhalb der Überschrift wäre also beim ersten
+       Sprachwechsel weg. -->
+  <p class="kopf__untertitel" data-i18n="app.untertitel">Das Rechteck-Rätsel</p>
+  <button class="symbolknopf" id="btn-einstellungen" type="button"
+          data-i18n-aria="a11y.einstellungen" aria-label="Einstellungen"
+          data-i18n-titel="einst.titel" title="Einstellungen">
+    <svg class="symbol" aria-hidden="true"><use href="#i-einstellungen"></use></svg>
+  </button>
+</header>
+
+<!--
+  Drei gleich gebaute Kärtchen: Marke, Wert, eine Zeile Notiz darunter. Die
+  Notizzeile ist auch dann da, wenn sie leer bleibt – sonst wären die Kärtchen
+  verschieden hoch und die Werte ständen auf verschiedener Höhe.
+
+  Nur "Stufe" ist ein Knopf: Zeit und offene Kästchen kann man nicht
+  anfassen, und ein Knopf, bei dem nichts passiert, ist schlimmer als eine
+  Anzeige.
+-->
+<section class="hud">
+  <div class="karte" id="karte-zeit" role="group" data-i18n-aria="a11y.karteZeit" aria-label="Verbrauchte Zeit">
+    <span class="karte__marke" data-i18n="hud.zeit">Zeit</span>
+    <span class="karte__wert" id="wert-zeit">0:00</span>
+    <span class="karte__notiz" id="notiz-zeit"></span>
+  </div>
+  <div class="karte" id="karte-offen" role="group" data-i18n-aria="a11y.karteOffen" aria-label="Noch offene Kästchen">
+    <span class="karte__marke" data-i18n="hud.offen">Offen</span>
+    <span class="karte__wert" id="wert-offen">–</span>
+    <span class="karte__notiz" id="notiz-offen"></span>
+  </div>
+  <!--
+    Dieses eine Kärtchen trägt KEIN data-i18n-aria: sein Name enthält die
+    laufende Stufe ({stufe} in a11y.karteStufe), und `anwenden` kennt beim
+    Sprachwechsel nur die Werte, die zeigeTexte() ihm mitgibt. Geschrieben
+    wird der Name deshalb in zeichneKarten() in app.js — dort, wo die Stufe
+    ohnehin bekannt ist. Das aria-label hier ist der Wert für die Sekunden
+    vor dem ersten Rätsel, genau wie der sichtbare Text daneben.
+  -->
+  <div class="karte karte--knopf" id="karte-stufe" role="button" tabindex="0"
+       aria-label="Stufe wechseln">
+    <span class="karte__marke" data-i18n="hud.stufe">Stufe</span>
+    <span class="karte__wert" id="wert-stufe" data-i18n="stufe.mittel">Mittel</span>
+    <span class="karte__notiz" id="notiz-stufe"></span>
+  </div>
+</section>
+
+<main class="feld">
+  <div class="brett-huelle">
+    <!--
+      Drei Lagen auf demselben Quadrat, und die Reihenfolge ist die halbe
+      Gestaltung:
+
+        #raster   die Zellen. Sie sind durchsichtig und tragen nur die
+                  Rasterlinien (als Rand) und die Zahlen.
+        #teile    die fertigen Rechtecke, absolut gesetzt aus --x/--y/--b/--h.
+                  Sie liegen ÜBER den Zellrändern und decken die Linien im
+                  Inneren einer Fläche zu – das ist der Mondrian-Blick: eine
+                  gesetzte Fläche ist eine Fläche, kein gefärbtes Millimeter-
+                  papier. Die Zahlen bleiben trotzdem oben, weil sie eine
+                  eigene Ebene bekommen.
+        #vorschau das Rechteck, das gerade gezogen wird. Ganz oben, sonst
+                  verschwindet es unter dem, was schon liegt.
+
+      --spalten/--zeilen stehen hier als Startwert, damit das Brett schon vor
+      dem ersten Rätsel quadratisch dasteht; app.js schreibt sie um.
+    -->
+    <div class="brett" id="brett" style="--spalten:8; --zeilen:8"
+         role="group" tabindex="0" data-i18n-aria="a11y.brett" aria-label="Spielbrett">
+      <div class="teile" id="teile" aria-hidden="true"></div>
+      <div class="vorschau" id="vorschau" hidden></div>
+      <div class="raster" id="raster"></div>
+    </div>
+  </div>
+  <p class="sr-only" id="brett-sagt" aria-live="polite"></p>
+</main>
+
+<!--
+  aria-label und data-i18n-aria müssen DASSELBE sagen. Hier stand
+  data-i18n-aria="a11y.brett" neben aria-label="Werkzeuge": im Markup las
+  sich das richtig, aber der erste Lauf von `anwenden` überschrieb das
+  Attribut mit "Spielbrett" – und danach hieß die Werkzeugleiste für jede
+  Vorlesehilfe genauso wie das Brett darüber. Ein Fehler, den kein Test
+  findet, weil beide Dateien für sich in Ordnung sind: der Schlüssel
+  existiert, das Attribut ist bedient. Nur der Satz ist der falsche.
+-->
+<nav class="leiste" data-i18n-aria="a11y.werkzeuge" aria-label="Werkzeuge">
+  <button class="werkzeug" id="btn-zurueck" type="button">
+    <svg class="symbol" aria-hidden="true"><use href="#i-zurueck"></use></svg>
+    <span class="werkzeug__text" data-i18n="werkzeug.zurueck">Zurück</span>
+  </button>
+  <button class="werkzeug" id="btn-vor" type="button">
+    <svg class="symbol" aria-hidden="true"><use href="#i-vor"></use></svg>
+    <span class="werkzeug__text" data-i18n="werkzeug.vor">Vor</span>
+  </button>
+  <button class="werkzeug werkzeug--tipp" id="btn-tipp" type="button">
+    <svg class="symbol" aria-hidden="true"><use href="#i-tipp"></use></svg>
+    <span class="werkzeug__text" data-i18n="werkzeug.tipp">Tipp</span>
+  </button>
+  <button class="werkzeug" id="btn-leeren" type="button">
+    <svg class="symbol" aria-hidden="true"><use href="#i-leeren"></use></svg>
+    <span class="werkzeug__text" data-i18n="werkzeug.leeren">Leeren</span>
+  </button>
+  <button class="werkzeug werkzeug--neu" id="btn-neu" type="button">
+    <svg class="symbol" aria-hidden="true"><use href="#i-neu"></use></svg>
+    <span class="werkzeug__text" data-i18n="werkzeug.neu">Neu</span>
+  </button>
+</nav>
+
+<div class="hinweis" id="hinweis" role="status" aria-live="polite" hidden></div>
+
+
+<!-- ===================== Regeln ===================== -->
+<dialog class="dlg" id="dlg-regeln" tabindex="-1" aria-labelledby="regeln-titel">
+  <div class="dlg__blatt">
+    <div class="dlg__kopf">
+      <div class="dlg__griff" aria-hidden="true"></div>
+      <h2 id="regeln-titel" data-i18n="regeln.titel">So wird gespielt</h2>
+      <button class="dlg__zu" type="button" data-zu
+              data-i18n-aria="a11y.dialogZu" aria-label="Schließen">
+        <svg class="symbol" aria-hidden="true"><use href="#i-zu"></use></svg>
+      </button>
+    </div>
+    <div class="dlg__inhalt">
+      <p class="dlg__kern" data-i18n="regeln.kern">Zerlege das Raster restlos in Rechtecke: in jedem Rechteck steht genau eine Zahl, und die Zahl sagt, aus wie vielen Kästchen es besteht.</p>
+
+      <!--
+        Ein gelöstes Beispiel sagt mehr als drei Sätze. Es ist absichtlich
+        inline und absichtlich unbeschriftet gezeichnet: die Flächen holen
+        ihre Farben aus denselben Marken wie das Brett (--f0 … --f4), also
+        sieht das Bild in jedem Stil und in jedem Farbschema so aus wie das
+        Spiel daneben. Ein PNG könnte das nicht, und eine zweite Datei wäre
+        eine Anfrage mehr.
+
+        Die Kästchenlinien INNERHALB einer Fläche bleiben sichtbar – sonst
+        sieht man nicht, dass die 6 aus sechs Kästchen besteht, und genau das
+        ist der Satz, den das Bild erklären soll.
+      -->
+      <svg class="beispiel" viewBox="0 0 240 180" role="img"
+           data-i18n-aria="regeln.bildAlt"
+           aria-label="Beispiel: ein Raster aus vier mal drei Kästchen, restlos zerlegt in vier Rechtecke – die 6 als 2×3, die 3 als liegender Streifen, die 2 als stehendes Paar und die 1 als einzelnes Kästchen.">
+        <g class="beispiel__flaechen">
+          <rect class="beispiel__flaeche beispiel__flaeche--a" x="0" y="0" width="180" height="120"/>
+          <rect class="beispiel__flaeche beispiel__flaeche--b" x="0" y="120" width="180" height="60"/>
+          <rect class="beispiel__flaeche beispiel__flaeche--c" x="180" y="0" width="60" height="120"/>
+          <rect class="beispiel__flaeche beispiel__flaeche--d" x="180" y="120" width="60" height="60"/>
+        </g>
+        <path class="beispiel__raster" d="M60 0V180M120 0V180M180 0V180M0 60H240M0 120H240"/>
+        <path class="beispiel__kante" d="M0 0H240V180H0Z M180 0V180 M0 120H180"/>
+        <g class="beispiel__zahlen">
+          <rect class="beispiel__plaettchen" x="68" y="8" width="44" height="44" rx="3"/>
+          <text class="beispiel__zahl" x="90" y="31">6</text>
+          <rect class="beispiel__plaettchen" x="68" y="128" width="44" height="44" rx="3"/>
+          <text class="beispiel__zahl" x="90" y="151">3</text>
+          <rect class="beispiel__plaettchen" x="188" y="8" width="44" height="44" rx="3"/>
+          <text class="beispiel__zahl" x="210" y="31">2</text>
+          <rect class="beispiel__plaettchen" x="188" y="128" width="44" height="44" rx="3"/>
+          <text class="beispiel__zahl" x="210" y="151">1</text>
+        </g>
+      </svg>
+
+      <p data-i18n="regeln.p1">Am Ende gehört jedes Kästchen zu genau einem Rechteck. Keine Lücken, keine Überlappungen – das Raster geht restlos auf. Die Summe aller Zahlen ist deshalb immer so groß wie das ganze Raster.</p>
+      <p data-i18n="regeln.p2">Die Zahl ist die Fläche ihres Rechtecks, nicht seine Kantenlänge. Eine 6 wird also 1×6, 2×3, 3×2 oder 6×1; welche dieser Formen bleibt, entscheiden die Nachbarn. Eine 1 ist immer nur ihr eigenes Kästchen, und eine Primzahl wie 7 bleibt immer ein schmaler Streifen.</p>
+      <p data-i18n="regeln.p3">Jedes Rätsel hat genau eine Lösung. Auf den unteren Stufen kommt man Schritt für Schritt hin, ohne zu raten: am besten dort anfangen, wo eine Zahl wenig Platz hat – eine 4 in der Ecke oder eine große Zahl am Rand lässt oft nur eine Form zu. Von da an wird es enger, und die Kanten der schon gesetzten Rechtecke zeigen den nächsten Schritt.</p>
+
+      <h3 class="dlg__untertitel" data-i18n="regeln.bedienungTitel">Bedienung</h3>
+      <ul class="liste">
+        <li data-i18n="regeln.b1">Ziehen: von einer Ecke des Rechtecks zur gegenüberliegenden. Der Umriss zeigt beim Ziehen mit, was entsteht, und ob Zahl und Fläche zusammenpassen.</li>
+        <li data-i18n="regeln.b2">Antippen: ein Antippen nimmt ein gesetztes Rechteck wieder weg.</li>
+        <li data-i18n="regeln.b3">Tipp: setzt ein Rechteck, das schon zwingend ist, und sagt dazu, woran man das sieht. Tipps werden mitgezählt.</li>
+        <li data-i18n="regeln.b4">Zurück und Vor gehen durch die eigenen Züge, Leeren räumt das ganze Brett. Die Uhr läuft dabei weiter.</li>
+      </ul>
+    </div>
+    <div class="dlg__fuss">
+      <button class="knopf knopf--voll" id="btn-regeln-los" type="button" data-zu
+              data-i18n="regeln.los">Los geht’s</button>
+    </div>
+  </div>
+</dialog>
+
+
+<!-- ===================== Einstellungen ===================== -->
+<dialog class="dlg" id="dlg-einstellungen" tabindex="-1" aria-labelledby="einst-titel">
+  <div class="dlg__blatt">
+    <div class="dlg__kopf">
+      <div class="dlg__griff" aria-hidden="true"></div>
+      <h2 id="einst-titel" data-i18n="einst.titel">Einstellungen</h2>
+      <button class="dlg__zu" type="button" data-zu
+              data-i18n-aria="a11y.dialogZu" aria-label="Schließen">
+        <svg class="symbol" aria-hidden="true"><use href="#i-zu"></use></svg>
+      </button>
+    </div>
+    <div class="dlg__inhalt">
+
+      <h3 class="dlg__untertitel" data-i18n="einst.darstellung">Darstellung</h3>
+
+      <section class="feldgruppe">
+        <h4 class="feldgruppe__titel" data-i18n="einst.skin">Stil</h4>
+        <!--
+          Knopfreihe statt <select>: drei Möglichkeiten sind auf dem Telefon
+          mit einem Daumen schneller getroffen als über eine aufklappende
+          Liste, und der eingestellte Wert steht sichtbar da statt hinter
+          einem Klick.
+        -->
+        <div class="wahl" id="wahl-skin" role="group" data-i18n-aria="einst.skin" aria-label="Stil">
+          <button class="wahl__option" type="button" data-wert="mondrian">
+            <svg class="wahl__haken" aria-hidden="true"><use href="#i-haken"></use></svg>
+            <span data-i18n="skin.mondrian">Mondrian</span>
+          </button>
+          <button class="wahl__option" type="button" data-wert="papier">
+            <svg class="wahl__haken" aria-hidden="true"><use href="#i-haken"></use></svg>
+            <span data-i18n="skin.papier">Papier</span>
+          </button>
+          <button class="wahl__option" type="button" data-wert="m3">
+            <svg class="wahl__haken" aria-hidden="true"><use href="#i-haken"></use></svg>
+            <span data-i18n="skin.m3">Material 3</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="feldgruppe">
+        <h4 class="feldgruppe__titel" data-i18n="einst.thema">Farbschema</h4>
+        <div class="wahl" id="wahl-thema" role="group" data-i18n-aria="einst.thema" aria-label="Farbschema">
+          <button class="wahl__option" type="button" data-wert="auto">
+            <svg class="wahl__haken" aria-hidden="true"><use href="#i-haken"></use></svg>
+            <span data-i18n="thema.auto">Auto</span>
+          </button>
+          <button class="wahl__option" type="button" data-wert="hell">
+            <svg class="wahl__haken" aria-hidden="true"><use href="#i-haken"></use></svg>
+            <span data-i18n="thema.hell">Hell</span>
+          </button>
+          <button class="wahl__option" type="button" data-wert="dunkel">
+            <svg class="wahl__haken" aria-hidden="true"><use href="#i-haken"></use></svg>
+            <span data-i18n="thema.dunkel">Dunkel</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="feldgruppe">
+        <h4 class="feldgruppe__titel" data-i18n="einst.sprache">Sprache</h4>
+        <!-- Die Sprachnamen stehen in ihrer eigenen Sprache: wer die
+             Oberfläche versehentlich auf Italienisch gestellt hat, findet
+             "Deutsch" auch dann noch. -->
+        <div class="wahl" id="wahl-sprache" role="group" data-i18n-aria="einst.sprache" aria-label="Sprache">
+          <button class="wahl__option" type="button" data-wert="de" lang="de">
+            <svg class="wahl__haken" aria-hidden="true"><use href="#i-haken"></use></svg>
+            <span data-i18n="sprache.de">Deutsch</span>
+          </button>
+          <button class="wahl__option" type="button" data-wert="it" lang="it">
+            <svg class="wahl__haken" aria-hidden="true"><use href="#i-haken"></use></svg>
+            <span data-i18n="sprache.it">Italiano</span>
+          </button>
+          <button class="wahl__option" type="button" data-wert="en" lang="en">
+            <svg class="wahl__haken" aria-hidden="true"><use href="#i-haken"></use></svg>
+            <span data-i18n="sprache.en">English</span>
+          </button>
+        </div>
+      </section>
+
+      <h3 class="dlg__untertitel" data-i18n="einst.spiel">Spiel</h3>
+
+      <section class="feldgruppe">
+        <label class="kuerzel">
+          <span class="kuerzel__marke" data-i18n="einst.kuerzel">Dein Kürzel</span>
+          <input class="kuerzel__feld" id="feld-kuerzel" type="text" maxlength="3" size="3"
+                 inputmode="text" autocapitalize="characters" autocomplete="off"
+                 spellcheck="false" enterkeyhint="done" placeholder="AAA">
+        </label>
+        <p class="notiz" data-i18n="einst.kuerzelHinweis">Drei Zeichen, Buchstaben oder Ziffern. Sie stehen in der Rangliste neben deiner Zeit. Ohne Kürzel wird die Partie nur mitgezählt.</p>
+      </section>
+
+      <section class="feldgruppe">
+        <label class="zeile">
+          <span class="zeile__text" data-i18n="einst.welt">Weltweit mitzählen</span>
+          <input class="schalter" id="schalter-welt" type="checkbox">
+        </label>
+        <p class="notiz" data-i18n="einst.weltHinweis">Hinaus geht nur, was in der Liste steht: Stufe, Zeit, Fehler, Tipps und dein Kürzel. Kein Gerät, keine Kennung, kein Konto; die IP-Adresse sieht der Dienst wie jeder Server im Netz. Weil niemand angemeldet ist, kann jeder eintragen, was er will – nimm die Weltwerte als Anhaltspunkt, nicht als Urkunde.</p>
+        <label class="zeile">
+          <span class="zeile__text" data-i18n="einst.hilfslinien">Hilfslinien im Raster</span>
+          <input class="schalter" id="schalter-hilfslinien" type="checkbox">
+        </label>
+        <label class="zeile">
+          <span class="zeile__text" data-i18n="einst.vibration">Vibration</span>
+          <input class="schalter" id="schalter-vibration" type="checkbox">
+        </label>
+      </section>
+
+      <section class="feldgruppe">
+        <button class="knopf knopf--rand" id="btn-rangliste" type="button">
+          <svg class="symbol" aria-hidden="true"><use href="#i-pokal"></use></svg>
+          <span data-i18n="einst.rangliste">Rangliste</span>
+        </button>
+      </section>
+
+      <h3 class="dlg__untertitel" data-i18n="einst.ueber">Über</h3>
+      <p class="notiz"><span id="einst-fassung" data-i18n="einst.fassung">Fassung 1.0.0</span></p>
+      <p class="notiz"><a class="verweis" href="https://github.com/cauer71/Shikaku"
+                          data-i18n="einst.quelle">Quelltext</a></p>
+      <p class="notiz">shikaku.auer.page</p>
+    </div>
+    <div class="dlg__fuss">
+      <button class="knopf knopf--voll" type="button" data-zu data-i18n="einst.zu">Fertig</button>
+    </div>
+  </div>
+</dialog>
+
+
+<!-- ===================== Ende einer Partie ===================== -->
+<dialog class="dlg" id="dlg-ende" tabindex="-1" aria-labelledby="ende-titel">
+  <div class="dlg__blatt dlg__blatt--ende">
+    <div class="dlg__kopf">
+      <div class="dlg__griff" aria-hidden="true"></div>
+      <h2 id="ende-titel" data-i18n="ende.gewonnen">Gelöst</h2>
+      <button class="dlg__zu" type="button" data-zu
+              data-i18n-aria="a11y.dialogZu" aria-label="Schließen">
+        <svg class="symbol" aria-hidden="true"><use href="#i-zu"></use></svg>
+      </button>
+    </div>
+    <div class="dlg__inhalt dlg__inhalt--mitte">
+      <svg class="ende__pokal" aria-hidden="true"><use href="#i-pokal"></use></svg>
+      <p class="ende__zeit" id="ende-zeit">–</p>
+      <p class="ende__text" id="ende-text"></p>
+      <p class="ende__rang" id="ende-rang"></p>
+      <label class="kuerzel kuerzel--ende">
+        <span class="kuerzel__marke" data-i18n="ende.kuerzelFrage">Kürzel für die Rangliste</span>
+        <input class="kuerzel__feld" id="ende-kuerzel" type="text" maxlength="3" size="3"
+               inputmode="text" autocapitalize="characters" autocomplete="off"
+               spellcheck="false" enterkeyhint="done" placeholder="AAA">
+      </label>
+      <p class="notiz" data-i18n="ende.ohneKuerzel">Ohne Kürzel wird die Partie mitgezählt, kommt aber nicht in die Liste.</p>
+    </div>
+    <div class="dlg__fuss dlg__fuss--zwei">
+      <button class="knopf knopf--rand" id="btn-ende-zu" type="button" data-zu
+              data-i18n="ende.zu">Schließen</button>
+      <button class="knopf knopf--voll" id="btn-ende-nochmal" type="button"
+              data-i18n="ende.nochmal">Nochmal</button>
+    </div>
+  </div>
+</dialog>
+
+
+<!-- ===================== Rangliste ===================== -->
+<dialog class="dlg" id="dlg-rangliste" tabindex="-1" aria-labelledby="rang-titel">
+  <div class="dlg__blatt">
+    <div class="dlg__kopf">
+      <div class="dlg__griff" aria-hidden="true"></div>
+      <h2 id="rang-titel" data-i18n="rang.titel">Rangliste</h2>
+      <button class="dlg__zu" type="button" data-zu
+              data-i18n-aria="a11y.dialogZu" aria-label="Schließen">
+        <svg class="symbol" aria-hidden="true"><use href="#i-zu"></use></svg>
+      </button>
+    </div>
+    <div class="dlg__inhalt">
+      <!--
+        Reiter, und zwar vollständig: role="tablist"/"tab" allein war eine
+        halbe Angabe und damit schlechter als keine.
+
+        Wer role="tab" schreibt, verspricht drei Dinge, und alle drei
+        fehlten: einen Verweis auf die Tafel, die der Reiter zeigt
+        (aria-controls), eine Tafel mit role="tabpanel" – ohne sie hängt
+        das aria-selected in der Luft und die Vorlesehilfe kann nicht
+        sagen, WAS gerade umgeschaltet wird –, und die Bedienung mit den
+        Pfeiltasten. Nach dem Muster ist eine Reiterreihe EIN Tabhalt: man
+        springt mit Tab hinein und wechselt mit den Pfeilen, statt sich
+        durch vier Knöpfe zu tabben. Das rollende tabindex und die Tasten
+        stehen in app.js (zeigeReiter und der keydown-Zuhörer dort).
+
+        Die Kennungen der Reiter braucht die Tafel, um sich nach dem
+        gerade gewählten Reiter zu benennen – deshalb tragen sie eine,
+        obwohl app.js sie über data-stufe findet.
+      -->
+      <div class="reiter-leiste" id="rang-reiter" role="tablist" data-i18n-aria="hud.stufe" aria-label="Stufe">
+        <button class="reiter" type="button" role="tab" id="rang-reiter-leicht"
+                aria-controls="rang-liste" data-stufe="leicht" data-i18n="stufe.leicht">Leicht</button>
+        <button class="reiter" type="button" role="tab" id="rang-reiter-mittel"
+                aria-controls="rang-liste" data-stufe="mittel" data-i18n="stufe.mittel">Mittel</button>
+        <button class="reiter" type="button" role="tab" id="rang-reiter-schwer"
+                aria-controls="rang-liste" data-stufe="schwer" data-i18n="stufe.schwer">Schwer</button>
+        <button class="reiter" type="button" role="tab" id="rang-reiter-experte"
+                aria-controls="rang-liste" data-stufe="experte" data-i18n="stufe.experte">Experte</button>
+      </div>
+      <!-- tabindex="0", weil die Tafel selbst keinen bedienbaren Inhalt hat:
+           eine Tabelle ohne Knöpfe wäre sonst mit der Tastatur gar nicht zu
+           erreichen und die Liste für jemanden, der nicht scrollen kann,
+           nicht lesbar. -->
+      <div class="rangliste" id="rang-liste" role="tabpanel" tabindex="0"
+           aria-labelledby="rang-reiter-mittel"></div>
+      <p class="notiz notiz--welt" id="rang-welt"></p>
+      <!--
+        Der ehrliche Satz gehört sichtbar in den Dialog und nicht ins
+        Kleingedruckte: eine offene Liste ohne Konten ist gegen Falscheinträge
+        nicht zu sichern, und wer die Liste liest, soll das wissen, bevor er
+        sich über einen unmöglichen Rekord ärgert.
+      -->
+      <p class="notiz" data-i18n="rang.hinweis">Gezählt wird die Zeit bis zum letzten gesetzten Rechteck. Fehler und Tipps stehen daneben, kosten aber keine Sekunden.</p>
+      <p class="notiz" data-i18n="einst.weltHinweis">Hinaus geht nur, was in der Liste steht: Stufe, Zeit, Fehler, Tipps und dein Kürzel. Kein Gerät, keine Kennung, kein Konto; die IP-Adresse sieht der Dienst wie jeder Server im Netz. Weil niemand angemeldet ist, kann jeder eintragen, was er will – nimm die Weltwerte als Anhaltspunkt, nicht als Urkunde.</p>
+    </div>
+    <div class="dlg__fuss">
+      <button class="knopf knopf--voll" type="button" data-zu data-i18n="einst.zu">Fertig</button>
+    </div>
+  </div>
+</dialog>
+
+
+<!-- ===================== Neues Rätsel ===================== -->
+<dialog class="dlg" id="dlg-neu" tabindex="-1" aria-labelledby="neu-titel">
+  <div class="dlg__blatt">
+    <div class="dlg__kopf">
+      <div class="dlg__griff" aria-hidden="true"></div>
+      <h2 id="neu-titel" data-i18n="neu.titel">Neues Rätsel</h2>
+      <button class="dlg__zu" type="button" data-zu
+              data-i18n-aria="a11y.dialogZu" aria-label="Schließen">
+        <svg class="symbol" aria-hidden="true"><use href="#i-zu"></use></svg>
+      </button>
+    </div>
+    <div class="dlg__inhalt">
+      <p class="dlg__kern" data-i18n="neu.frage">Welche Stufe?</p>
+      <!-- Das Ausmaß steht neben dem Namen der Stufe: "Experte" sagt niemandem,
+           wie groß das Brett wird, "12 × 12" schon. Die Zahlen sind dieselben
+           wie in AUSMASS in erzeuger.js. -->
+      <div class="stufen" id="neu-stufen">
+        <button class="stufe" type="button" data-stufe="leicht">
+          <span class="stufe__name" data-i18n="stufe.leicht">Leicht</span>
+          <span class="stufe__mass">6 × 6</span>
+        </button>
+        <button class="stufe" type="button" data-stufe="mittel">
+          <span class="stufe__name" data-i18n="stufe.mittel">Mittel</span>
+          <span class="stufe__mass">8 × 8</span>
+        </button>
+        <button class="stufe" type="button" data-stufe="schwer">
+          <span class="stufe__name" data-i18n="stufe.schwer">Schwer</span>
+          <span class="stufe__mass">10 × 10</span>
+        </button>
+        <button class="stufe" type="button" data-stufe="experte">
+          <span class="stufe__name" data-i18n="stufe.experte">Experte</span>
+          <span class="stufe__mass">12 × 12</span>
+        </button>
+      </div>
+      <p class="notiz" id="neu-laeuft" hidden data-i18n="neu.laeuft">Das Rätsel wird gebaut …</p>
+    </div>
+    <div class="dlg__fuss">
+      <button class="knopf knopf--rand" id="btn-neu-zu" type="button" data-zu
+              data-i18n="neu.abbrechen">Abbrechen</button>
+    </div>
+  </div>
+</dialog>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

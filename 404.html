@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nicht gefunden — Shikaku</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#17181a" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
+<!--
+  Diese Seite steht fuer sich. Kein basis.css, kein Modul, kein Icon von
+  aussen - und das ist Absicht: sie wird genau dann gezeigt, wenn eine Adresse
+  nicht aufgeht. Wuerde sie ihre Farben aus einer zweiten Datei holen, waere
+  der naechstliegende Fall (die Datei ist es, die fehlt) eine unformatierte
+  Textwueste. Die Farben sind deshalb hier noch einmal von Hand gesetzt,
+  dieselben wie in mondrian.css.
+-->
+<style>
+:root {
+  color-scheme: light;
+  --grund: #ffffff;
+  --tinte: #0f0f11;
+  --tinte-leise: #4a4a50;
+  --flaeche: #ffffff;
+  --linie: #0f0f11;
+  --rot: #d5202a;
+  --blau: #10429a;
+  --gelb: #f4c300;
+  --grauweiss: #eeece4;
+  --akzent: #0f0f11;
+  --akzent-tinte: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --grund: #17181a;
+    --tinte: #f5f5f2;
+    --tinte-leise: #b9b9b5;
+    --flaeche: #1f2124;
+    --linie: #f5f5f2;
+    --grauweiss: #2b2e33;
+    --akzent: #f5f5f2;
+    --akzent-tinte: #17181a;
+  }
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  display: grid;
+  place-items: center;
+  /* Auf dem Telefon liegt unten die Gestenleiste und oben die Uhr. Ohne das
+     klebt der Knopf an der Kante und ist nicht zu treffen. */
+  padding:
+    calc(24px + env(safe-area-inset-top)) calc(20px + env(safe-area-inset-right))
+    calc(24px + env(safe-area-inset-bottom)) calc(20px + env(safe-area-inset-left));
+  color: var(--tinte);
+  background: var(--grund);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+main {
+  max-width: 32ch;
+  text-align: center;
+  padding: 28px 24px 26px;
+  background: var(--flaeche);
+  /* Harte Kante, kein Radius, kein Schatten: das ist der Auftritt des Spiels.
+     Wer hier runde Ecken hinsetzt, hat eine andere Seite gebaut. */
+  border: 4px solid var(--linie);
+}
+h1 { margin: 18px 0 8px; font-size: 21px; line-height: 27px; font-weight: 800; letter-spacing: -.2px; }
+p { margin: 0 0 22px; font-size: 14px; line-height: 21px; color: var(--tinte-leise); }
+a {
+  display: inline-block;
+  min-height: 44px;
+  line-height: 42px;
+  padding: 0 26px;
+  border: 3px solid var(--akzent);
+  background: var(--akzent);
+  color: var(--akzent-tinte);
+  font-size: 15px; font-weight: 700;
+  text-decoration: none;
+}
+a:hover { background: var(--flaeche); color: var(--akzent); }
+a:focus-visible { outline: 3px solid var(--blau); outline-offset: 3px; }
+svg { display: block; width: 128px; height: 128px; margin: 0 auto; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+<main>
+  <!--
+    Ein Raetsel, das nicht aufgeht: die Zahlen sagen 6, 4 und 4, das sind
+    vierzehn Felder - und das Raster hat sechzehn. Unten links bleibt ein
+    Loch. Genau das ist die Lage: eine Adresse, hinter der nichts steht.
+  -->
+  <svg viewBox="0 0 512 512" role="img" aria-label="Ein unvollständiges Rätsel: unten links fehlt ein Rechteck">
+    <rect x="0"   y="0"   width="256" height="384" fill="#d5202a"/>
+    <rect x="256" y="0"   width="256" height="256" fill="#10429a"/>
+    <rect x="256" y="256" width="256" height="256" fill="#f4c300"/>
+    <rect x="0"   y="384" width="256" height="128" fill="var(--grund)"/>
+    <g stroke="#ffffff" stroke-opacity=".26" stroke-width="5">
+      <path d="M128 0V384M0 128H256M0 256H256M384 0V256M256 128H512"/>
+    </g>
+    <g stroke="#16161a" stroke-opacity=".20" stroke-width="5">
+      <path d="M384 256V512M256 384H512"/>
+    </g>
+    <g stroke="var(--linie)" fill="none">
+      <path d="M256 0V512M0 384H256M256 256H512" stroke-width="26"/>
+      <rect x="11" y="11" width="490" height="490" stroke-width="22"/>
+      <!-- Das Loch: gestrichelt, weil dort nichts liegt. -->
+      <path d="M22 384H243M22 490H243M128 397V479" stroke-width="6" stroke-dasharray="14 12"
+            stroke-opacity=".55"/>
+    </g>
+    <g font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-weight="700"
+       text-anchor="middle" paint-order="stroke" stroke-width="8" stroke-linejoin="round">
+      <text x="132" y="256" font-size="170" fill="#ffffff" stroke="#ffffff">6</text>
+      <text x="379" y="185" font-size="150" fill="#ffffff" stroke="#ffffff">4</text>
+      <text x="379" y="432" font-size="150" fill="#16161a" stroke="#16161a">4</text>
+      <text x="132" y="470" font-size="86" fill="var(--linie)" stroke="var(--linie)"
+            stroke-width="5">?</text>
+    </g>
+  </svg>
+  <h1>Diese Seite gibt es nicht</h1>
+  <p>Shikaku hat nur eine Seite — das Brett. Alles andere ist ein Rätsel ohne Lösung.</p>
+  <a id="zurueck" href="/">Zum Spiel</a>
+</main>
+<script>
+  /*
+    Auf Cloudflare liegt das Spiel unter /, auf GitHub Pages als Projektseite
+    unter /<repo>/. Dort muss der Verweis den ersten Pfadabschnitt behalten,
+    sonst fuehrt "Zum Spiel" auf die Kontoseite und nicht ins Spiel.
+
+    Das steht hier eingebettet und nicht in einer eigenen Datei: eine zweite
+    Datei waere ein zweiter Weg, auf dem diese Seite scheitern kann - und sie
+    ist genau die Seite, die zeigt, dass ein Weg gescheitert ist. Die
+    Sicherheitsregel in _headers erlaubt kein 'unsafe-inline'; die Pruefsumme
+    dieses Blocks setzt tools/build-dist.mjs beim Bauen ein.
+  */
+  (function () {
+    if (!location.hostname.endsWith('github.io')) return;
+    var erster = location.pathname.split('/')[1];
+    if (erster) document.getElementById('zurueck').href = '/' + erster + '/';
+  })();
+</script>
+</body>
+</html>

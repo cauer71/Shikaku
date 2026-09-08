@@ -1,0 +1,78 @@
+# Kopfzeilen fuer Cloudflare Workers (statische Assets).
+#
+# Der Standard ist schon "public, max-age=0, must-revalidate" mit ETag - genau
+# richtig fuer index.html und fuer den Servicearbeiter. Ergaenzt wird hier nur,
+# was davon abweichen soll, plus etwas Absicherung.
+#
+# Diese Datei wird von Cloudflare AUSGEWERTET und nicht ausgeliefert. Sie muss
+# aber im Asset-Verzeichnis liegen, damit Cloudflare sie ueberhaupt sieht -
+# darum kopiert tools/build-dist.mjs sie ausdruecklich nach dist/, obwohl sie
+# keine der dort erlaubten Endungen hat.
+
+# Icons sind unveraenderlich; ihr Inhalt aendert sich nicht mehr. Wuerde er es
+# doch, bekaeme die Datei einen neuen Namen - eine neue Zeichnung unter der
+# alten Adresse kaeme bei niemandem an, der die App schon hat.
+/icons/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Ausdruecklich kurzlebig, damit eine neue Fassung sicher ankommt. Der
+# Servicearbeiter ist die einzige Datei, die sich selbst ersetzen muss: haelt
+# der Browser eine alte Fassung fest, bleibt auch der Rest alt.
+/sw.js
+  Cache-Control: public, max-age=0, must-revalidate
+
+# Vier Manifeste, eines je Sprache und ein neutrales. Sie tragen die Namen der
+# Kurzbefehle und den Titel - beides Text, der sich mit einer Uebersetzung
+# aendern kann, ohne dass ein Dateiname wechselt.
+/manifest.webmanifest
+  Cache-Control: public, max-age=0, must-revalidate
+/manifest.de.webmanifest
+  Cache-Control: public, max-age=0, must-revalidate
+/manifest.it.webmanifest
+  Cache-Control: public, max-age=0, must-revalidate
+/manifest.en.webmanifest
+  Cache-Control: public, max-age=0, must-revalidate
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  X-Frame-Options: SAMEORIGIN
+  # Ein Jahr nur ueber HTTPS. Gilt fuer diesen Namen und seine Unternamen,
+  # nicht fuer Geschwister wie zehner-paare.auer.page. Bewusst ohne "preload":
+  # das traegt den Namen in eine Liste in den Browsern selbst ein und ist nur
+  # muehsam wieder loszuwerden.
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  # Das Spiel braucht nichts davon - nicht einmal die Vibration ist eine
+  # Berechtigung im Sinne dieser Regel. Die Zeile schreibt es fest, damit es
+  # auch dann so bleibt, wenn spaeter etwas dazukommt.
+  Permissions-Policy: accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()
+  #
+  # Die Sicherheitsregel. Die App laedt nichts von aussen: keine Schrift, kein
+  # Bild, kein Skript. Die Regel schreibt das fest - kaeme je eine fremde
+  # Quelle hinzu, bricht sie sichtbar, statt still zu laden.
+  #
+  # SKRIPT_HASHES ist ein Platzhalter. tools/build-dist.mjs setzt beim
+  # Zusammenstellen von dist/ die SHA-256-Pruefsummen JEDES eingebetteten
+  # <script>-Blocks aus index.html und 404.html ein.
+  #
+  # Warum der Umstand und nicht einfach 'unsafe-inline'? Weil dieses Projekt
+  # genau einen eingebetteten Block braucht - den Startschnipsel im <head> von
+  # index.html, der Skin, Farbschema, Sprache und Manifest VOR dem ersten Bild
+  # setzt. Er kann kein Modul sein, denn Module laufen erst nach dem Aufbau des
+  # Dokuments, und dann blitzt der falsche Stil auf. 'unsafe-inline' waere die
+  # bequeme Antwort, erlaubt aber JEDES Skript, das im Quelltext auftaucht -
+  # auch eines, das sich erst unterwegs hineingeschrieben hat. Mit den
+  # Pruefsummen laeuft genau der Code, der beim Zusammenstellen in den Dateien
+  # stand; eine eingeschleuste Zeile hat eine andere Summe und wird nicht
+  # ausgefuehrt. Sie aendern sich mit jeder Aenderung an den Dateien, deshalb
+  # entstehen sie beim Bauen und stehen nicht von Hand hier.
+  #
+  # Fuer STIL bleibt 'unsafe-inline' noetig: die Rechtecke tragen ihre Lage in
+  # style="--x:2; --y:1; --b:4; --h:3", und das sind hunderte Stellen, die zur
+  # Laufzeit entstehen. Ein Nonce hilft dort nicht - er gilt fuer <style>, nicht
+  # fuer das Attribut.
+  #
+  # connect-src 'self' genuegt: auf Cloudflare liegt /api/ auf demselben Host
+  # wie das Spiel. Die Auswaertsadresse in online.js gilt nur, wenn die Seite
+  # auf *.github.io liegt - und dort wird diese Datei nicht gelesen.
+  Content-Security-Policy: default-src 'self'; script-src 'self' SKRIPT_HASHES; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'self'

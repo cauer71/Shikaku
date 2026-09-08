@@ -1,0 +1,288 @@
+/* =========================================================================
+   Shikaku – Skin "Material 3"
+
+   Damit das Spiel neben zehner-paare stehen kann: dieselbe Formensprache,
+   dieselben Rollennamen, nur ein anderer Quellton (siehe m3-farben.css).
+   Wer beide Spiele auf dem Telefon hat, soll sie als Geschwister erkennen.
+
+   Diese Datei enthält bewusst KEINEN eigenen Dunkel-Block. Das ist kein
+   Versehen und keine Ausnahme von der Regel, dass jeder Farbwert dreimal
+   dastehen muss – die Regel ist eine Ebene tiefer erfüllt: m3-farben.css
+   definiert jede --md-sys-color-* zuerst auf blankem :root, dann im
+   Media-Block unter :root:not([data-theme="light"]) und noch einmal unter
+   :root[data-theme="dark"]. Hier werden nur Namen weitergegeben. Ein
+   zweiter Dunkel-Block wäre eine Kopie ohne einen einzigen eigenen Wert und
+   würde beim nächsten Farbwechsel garantiert vergessen.
+
+   Jeder Alias bekommt trotzdem einen echten Notwert mitgegeben
+   (var(--rolle, #hex)). Grund: die Skin-Blätter werden im <head> über
+   `disabled` geschaltet, und wenn m3-farben.css aus irgendeinem Grund nicht
+   ankommt, stünde ohne Notwert eine leere Farbe da – und eine leere Farbe
+   ist in CSS nicht "die Vorgabe aus basis.css", sondern ein ungültiger Wert
+   und damit unsichtbarer Text. Die Notwerte sind die hellen Töne des
+   Quelltons; dunkel wird es dann eben nicht, aber lesbar bleibt es.
+   ========================================================================= */
+
+:root {
+  --grund: var(--md-sys-color-background, #f9f9ff);
+  --grund-rand: var(--md-sys-color-surface-dim, #dad9e1);
+  --tinte: var(--md-sys-color-on-surface, #1b1b20);
+  --tinte-leise: var(--md-sys-color-on-surface-variant, #454556);
+  --tinte-aus: var(--md-sys-color-outline, #767588);
+
+  --flaeche: var(--md-sys-color-surface-container-low, #f3f3fb);
+  --flaeche-2: var(--md-sys-color-surface-container-high, #e8e7ef);
+  --kante: var(--md-sys-color-outline-variant, #c5c5d9);
+  --kante-stark: var(--md-sys-color-outline, #767588);
+
+  --brett-grund: var(--md-sys-color-surface-container-lowest, #ffffff);
+  /*
+    Rasterlinie und Brettrahmen nehmen `outline` und NICHT
+    `outline-variant` — nachgerechnet, nicht nach Gefühl gewählt.
+
+    Material trennt die beiden Marken genau an dieser Frage:
+    outline-variant ist die "dekorative" Trennlinie, outline die
+    bedeutungstragende. Nachgerechnet liegt outline-variant (#c5c5d9) auf
+    dem Brettgrund (#ffffff) bei 1,70:1, im Dunkeln bei 2,06:1. Die
+    Rasterlinien sind hier aber der Inhalt selbst: wer eine 12 legen will,
+    muss zwölf Kästchen abzählen können, und damit greift WCAG 1.4.11
+    ("graphical objects required to understand the content") mit 3:1.
+    Mit outline sind es 4,50:1 (hell) und 6,09:1 (dunkel).
+
+    --hilfslinie bleibt bei outline-variant: die Linien INNERHALB einer
+    gesetzten Fläche sind eine abschaltbare Zählhilfe auf einem farbigen
+    Grund und nicht die Rasterstruktur.
+  */
+  --linie: var(--md-sys-color-outline, #767588);
+  --linie-dicke: 1px;
+  --hilfslinie: var(--md-sys-color-outline-variant, #c5c5d9);
+  --rahmen: 1px;
+  --rahmen-farbe: var(--md-sys-color-outline, #767588);
+  --radius-teil: 10px;
+  --teil-kante: 1px;
+
+  --zahl-grund: var(--md-sys-color-surface-container-lowest, #ffffff);
+  --zahl-tinte: var(--md-sys-color-on-surface, #1b1b20);
+  --zahl-kante: var(--md-sys-color-outline-variant, #c5c5d9);
+
+  /*
+    Die fünf Flächen kommen aus dem Schema und nicht aus frei gewählten
+    Pastelltönen – nur so bleibt der Skin bei einem Wechsel des Quelltons
+    stimmig. Genommen wird die FIXED-Reihe, und das ist eine bewusste Wahl
+    gegen die naheliegende Container-Reihe:
+
+    "fixed" heißt in Material 3, dass der Ton in hell und dunkel derselbe
+    ist. Genau das braucht ein Spielbrett. Mit den Container-Rollen war das
+    Brett im Dunkeln ein Feld aus vier fast schwarzen Tönen (Ton 30) und
+    einem hellen – im Bild sah man die Flächen kaum von den leeren Kästchen
+    unterschieden, und "leer oder gelegt" ist die wichtigste Auskunft des
+    Bretts. Mit der Fixed-Reihe sind die Flächen in beiden Fassungen helle,
+    klar getrennte Töne; das Zahlenplättchen dreht sich stattdessen mit
+    (surface-container-lowest ist hell im Hellen und dunkel im Dunklen) und
+    steht so in beiden Fassungen im Gegensatz zur Fläche.
+
+    Die Reihenfolge ist auf größten Abstand sortiert: die gierige Färbung in
+    app.js greift von vorne und vergibt 0 und 1 am häufigsten.
+  */
+  --f0: var(--md-sys-color-primary-fixed, #e0e0ff);
+  --f1: var(--md-sys-color-tertiary-fixed-dim, #ffb4a9);
+  --f2: var(--md-sys-color-secondary-fixed, #ffd7f6);
+  --f3: var(--md-sys-color-primary-fixed-dim, #c0c1fe);
+  --f4: var(--md-sys-color-tertiary-fixed, #ffdad5);
+
+  /* Material 3 kennt kein "Erfolg" – der dritte Ton ist die vorgesehene
+     Stelle für eine dritte Aussage, und "passt" ist genau das. */
+  --gut: var(--md-sys-color-tertiary, #98453d);
+  --gut-flaeche: var(--md-sys-color-tertiary-container, #ffdad5);
+  --fehler: var(--md-sys-color-error, #bf0420);
+  --fehler-flaeche: var(--md-sys-color-error-container, #ffdad5);
+  /* Die Schraffur der fehlerhaften Fläche wird gemischt und nicht voll
+     genommen: mit dem satten error-Ton war die Fläche im Bild ein
+     Warnschild und zog das Auge stärker an als das halbe Brett. */
+  --fehler-strich: color-mix(in srgb, var(--md-sys-color-error, #bf0420) 45%, transparent);
+  --tippfarbe: var(--md-sys-color-primary, #1956cd);
+  --tipp-flaeche: var(--md-sys-color-primary-container, #e0e0ff);
+  --gewaehlt: var(--md-sys-color-primary, #1956cd);
+
+  --akzent: var(--md-sys-color-primary, #1956cd);
+  --akzent-tinte: var(--md-sys-color-on-primary, #ffffff);
+  --akzent-leise: var(--md-sys-color-surface-container-high, #e8e7ef);
+  --verweis-farbe: var(--md-sys-color-primary, #1956cd);
+
+  --schalter-aus: var(--md-sys-color-surface-container-highest, #e2e2e9);
+  --schalter-knopf: var(--md-sys-color-outline, #767588);
+
+  --hinweis-grund: var(--md-sys-color-inverse-surface, #303036);
+  --hinweis-tinte: var(--md-sys-color-inverse-on-surface, #f0f0f8);
+
+  --fokus: var(--md-sys-color-primary, #1956cd);
+  --schleier: color-mix(in srgb, var(--md-sys-color-scrim, #000000) 42%, transparent);
+
+  /* Die Radien von Material 3: 12 für Karten, 8 für Chips, 28 für das
+     Bottom Sheet. */
+  --radius: 12px;
+  --radius-klein: 8px;
+  --radius-blatt: 28px;
+
+  /* Elevation 1 und die Kante des Sheets (Elevation 3, nur nach oben). */
+  --schatten: 0 1px 2px rgba(0, 0, 0, .18), 0 1px 3px 1px rgba(0, 0, 0, .10);
+  --schatten-hoch: 0 -1px 3px rgba(0, 0, 0, .14), 0 -8px 24px 4px rgba(0, 0, 0, .18);
+
+  --schrift: 'Roboto Flex', Roboto, system-ui, -apple-system, 'Segoe UI',
+             'Helvetica Neue', Arial, sans-serif;
+  --schrift-zahl: 'Roboto Flex', Roboto, system-ui, -apple-system, 'Segoe UI',
+                  'Helvetica Neue', Arial, sans-serif;
+  --zahl-gewicht: 700;
+  --zahl-sperrung: 0;
+}
+
+/* --- Flächen ohne Rand, dafür mit Ton -----------------------------------
+
+   Material 3 trennt Flächen über Farbtöne, nicht über Linien. Also: die
+   Kärtchen und Werkzeuge verlieren ihren Rand und bekommen einen
+   Container-Ton. Der Rand bleibt nur da, wo er eine Bedeutung hat – am
+   Brett und an den Chips.
+   ------------------------------------------------------------------------- */
+
+.karte {
+  border: 0;
+  background: var(--md-sys-color-surface-container, #ededf5);
+  box-shadow: none;
+}
+
+.karte--knopf { background: var(--md-sys-color-secondary-container, #ffd7f6); }
+.karte--knopf:hover { background: var(--md-sys-color-secondary-container, #ffd7f6); filter: brightness(.97); }
+.karte--knopf .karte__marke,
+.karte--knopf .karte__wert,
+.karte--knopf .karte__notiz { color: var(--md-sys-color-on-secondary-container, #2e102a); }
+
+/*
+  Die Leiste ist eine Navigationsleiste im Sinne von Material: eine
+  durchlaufende Fläche, in der die Ziele als Symbol mit Beschriftung stehen,
+  ohne eigene Kästchen. Der aktive Zustand ist ein Pillenhintergrund hinter
+  dem Symbol – hier zeigt er, dass ein Werkzeug bereitsteht.
+*/
+.leiste {
+  gap: 0;
+  background: var(--md-sys-color-surface-container, #ededf5);
+  border-radius: 0;
+}
+
+.werkzeug {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--md-sys-color-on-surface-variant, #454556);
+  border-radius: 16px;
+  gap: 3px;
+}
+
+.werkzeug:hover:not(:disabled) { background: var(--md-sys-color-surface-container-high, #e8e7ef); }
+.werkzeug:active:not(:disabled) { background: var(--md-sys-color-surface-container-highest, #e2e2e9); }
+
+.werkzeug:disabled { background: transparent; color: var(--md-sys-color-outline, #767588); }
+
+.werkzeug--neu { color: var(--md-sys-color-primary, #1956cd); }
+.werkzeug--neu:disabled { color: var(--md-sys-color-outline, #767588); }
+
+/* --- Brett --------------------------------------------------------------- */
+
+.brett {
+  --brett-radius: 16px;
+  --brett-schatten: none;
+}
+
+.brett::after { border-radius: 16px; }
+
+.zahl { box-shadow: 0 0 0 1px var(--zahl-kante); }
+
+.teil--gewaehlt { box-shadow: inset 0 0 0 3px var(--gewaehlt); }
+
+/* --- Chips, Knöpfe, Schalter --------------------------------------------- */
+
+/* Filter-Chips: 8 px Radius, nicht Pille – so steht es in der Spezifikation,
+   und so sehen sie neben zehner-paare gleich aus. */
+.wahl__option {
+  border-radius: var(--radius-klein);
+  border-color: var(--md-sys-color-outline, #767588);
+  background: transparent;
+}
+
+.wahl__option[aria-pressed="true"],
+.wahl__option[aria-checked="true"],
+.wahl__option--gewaehlt,
+.wahl__option.ist-an {
+  background: var(--md-sys-color-secondary-container, #ffd7f6);
+  border-color: var(--md-sys-color-secondary-container, #ffd7f6);
+  color: var(--md-sys-color-on-secondary-container, #2e102a);
+}
+
+.reiter {
+  border: 0;
+  background: var(--md-sys-color-surface-container-high, #e8e7ef);
+  color: var(--md-sys-color-on-surface-variant, #454556);
+}
+
+.reiter[aria-selected="true"],
+.reiter[aria-pressed="true"],
+.reiter--gewaehlt,
+.reiter.ist-an {
+  background: var(--md-sys-color-primary, #1956cd);
+  color: var(--md-sys-color-on-primary, #ffffff);
+}
+
+.stufe {
+  border: 0;
+  background: var(--md-sys-color-surface-container-high, #e8e7ef);
+  border-radius: var(--radius);
+}
+
+.stufe:hover { background: var(--md-sys-color-surface-container-highest, #e2e2e9); }
+
+.knopf--rand { border-color: var(--md-sys-color-outline, #767588); }
+
+/* Der Schalter von Material 3: ausgeschaltet ein kleiner Knauf in der
+   Umrissfarbe, eingeschaltet ein großer in on-primary. Die Größe ändert
+   sich mit – das ist der Teil, an dem man ihn erkennt. */
+.schalter {
+  border-color: var(--md-sys-color-outline, #767588);
+  background-size: 18px 18px;
+  background-position: left 4px center;
+  background-image: radial-gradient(circle at 50% 50%,
+    var(--md-sys-color-outline, #767588) 0 48%, transparent 50%);
+}
+
+.schalter:checked {
+  background-size: 26px 26px;
+  background-position: right 0px center;
+  background-image: radial-gradient(circle at 50% 50%,
+    var(--md-sys-color-on-primary, #ffffff) 0 46%, transparent 48%);
+}
+
+.kuerzel__feld {
+  border-width: 1px;
+  border-color: var(--md-sys-color-outline, #767588);
+  border-radius: var(--radius-klein);
+  background: var(--md-sys-color-surface-container-lowest, #ffffff);
+}
+
+/* --- Dialoge ------------------------------------------------------------- */
+
+.dlg__blatt {
+  background: var(--md-sys-color-surface-container-low, #f3f3fb);
+  border-radius: var(--radius-blatt) var(--radius-blatt) 0 0;
+}
+
+.dlg__kopf { border-bottom: 0; }
+.dlg__fuss { border-top: 0; }
+
+.dlg__griff { background: var(--md-sys-color-outline-variant, #c5c5d9); opacity: 1; }
+
+.ende__pokal { fill: var(--md-sys-color-primary, #1956cd); }
+
+/* --- Breite Schirme ------------------------------------------------------- */
+
+@media (min-width: 1000px) {
+  html { background: var(--md-sys-color-surface-dim, #dad9e1); }
+  body { box-shadow: 0 0 0 1px var(--kante); }
+}

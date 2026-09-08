@@ -1,0 +1,97 @@
+name: Shikaku auf GitHub Pages veröffentlichen
+
+# Zwei Auslöser und bewusst nicht mehr:
+#   push auf main       - was auf main liegt, ist das, was im Netz steht.
+#   workflow_dispatch   - von Hand, wenn eine Veröffentlichung hängen blieb
+#                         oder die Pages-Einstellung frisch umgestellt wurde.
+# Kein pull_request: ein Pull Request soll getestet werden, aber nichts
+# veröffentlichen - und die Tests laufen hier im ersten Auftrag ohnehin.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# So knapp wie möglich. contents: read genügt zum Auschecken; pages und
+# id-token braucht actions/deploy-pages, um sich gegenüber Pages auszuweisen.
+# Kein write auf contents: dieser Ablauf schreibt nichts ins Repository.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Zwei Veröffentlichungen gleichzeitig würden sich überschreiben, und wer
+# gewinnt, ist Zufall. cancel-in-progress ist dabei ausdrücklich falsch: eine
+# halb abgebrochene Veröffentlichung kann eine unvollständige Seite
+# hinterlassen. Also warten, nicht abbrechen.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  pruefen:
+    name: Regeltests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # Kein "npm ci": das Projekt hat keine Abhängigkeiten zur Laufzeit und
+      # keine package-lock.json. npm ci würde daran scheitern, und npm install
+      # hätte nichts zu tun.
+      #
+      # Die Tests laufen ohne Netz und ohne Datenbank. worker.test.js prüft
+      # pruefePartie und die Grenzen mit einer nachgebauten D1-Bindung, nicht
+      # gegen die echte Datenbank - ein Schreibruf aus dem Ablauf heraus würde
+      # die Rangliste mit Testzeilen füllen, und die stehen dann für immer
+      # drin (eine Zeile je Kürzel und Stufe, siehe migrations/0001_schema.sql).
+      - name: Modell, Löser, Erzeuger, Wörterbücher und die Grenze zur Datenbank
+        run: npm test
+
+      # Jeder data-i18n-Schlüssel aus index.html muss in i18n.js stehen. Ein
+      # fehlender Schlüssel ist kein Absturz, sondern ein roher Schlüsselname
+      # mitten im Bild - genau der Fehler, den niemand meldet und den man
+      # selbst nicht sieht, weil man die eigene Sprache benutzt.
+      - name: Wörterbuch gegen die Oberfläche prüfen
+        run: npm run check:i18n
+
+  veroeffentlichen:
+    name: Veröffentlichen
+    needs: pruefen
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Pages einrichten
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      # Hochgeladen wird dist/ und nicht das Repository.
+      #
+      # Der bequeme Weg wäre "path: ." - dann liegen aber Tests, Werkzeuge,
+      # Migrationen und worker.js mit im Netz, und die Fassungsnummern und die
+      # Offline-Liste im Servicearbeiter würden nie gegengeprüft. Genau das tut
+      # tools/build-dist.mjs, und deshalb gehört der Schritt auch hierher und
+      # nicht nur zu Cloudflare: bricht er ab, wird nichts veröffentlicht.
+      #
+      # Was Cloudflare aus _headers liest, ignoriert GitHub Pages - die Datei
+      # geht trotzdem mit, damit beide Ziele aus derselben Quelle entstehen.
+      - name: dist/ zusammenstellen
+        run: npm run build
+
+      - name: Seite als Artefakt hochladen
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - name: Deployment
+        id: deployment
+        uses: actions/deploy-pages@v4

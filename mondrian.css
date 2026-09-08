@@ -1,0 +1,491 @@
+/* =========================================================================
+   Shikaku – Skin "Mondrian" (Standard)
+
+   Der Gedanke hinter diesem Stil ist kein Bildzitat, sondern eine
+   Feststellung: Shikaku IST eine Flächenteilung in Rechtecke, und genau das
+   hat De Stijl gemalt. Also wird das Aussehen nicht dekoriert, sondern die
+   Sache selbst gezeigt – reines Weiß als Grund, harte schwarze Linien, die
+   fertigen Flächen in Zinnoberrot, Kobaltblau, Chromgelb, Grauweiß und
+   Schwarz. Kein Schatten, kein Farbverlauf, kein runder Radius: eine
+   Rundung wäre die erste Lüge in einem Bild, das von rechten Winkeln lebt.
+
+   Deshalb ist hier auch --schatten auf "none" gesetzt und nicht bloß
+   abgeschwächt: getrennt werden die Bauteile durch Linien, nicht durch
+   Tiefe. Und weil alles auf Linien beruht, stoßen Kärtchen und Werkzeuge
+   ohne Lücke aneinander – jede geteilte Kante ist genau eine Linie
+   (border-left der Nachbarn wird weggenommen, nicht mit negativen Rändern
+   überlappt; das hielte die Spalten nicht gleich breit).
+
+   Im Dunkeln kehrt sich das um: tiefes Anthrazit als Grund, dieselben
+   Grundfarben, die Linien in Weiß. Die Grundfarben werden dafür leicht
+   aufgehellt – Kobaltblau auf Anthrazit ist sonst ein dunkles Loch, und die
+   Fläche soll eine Fläche sein und kein Schatten. Nur die fünfte Fläche
+   tauscht die Seite: aus Schwarz wird Elfenbein, weil eine schwarze Fläche
+   auf Anthrazit von einem leeren Kästchen nicht zu unterscheiden wäre.
+   ========================================================================= */
+
+:root {
+  --grund: #ffffff;
+  --grund-rand: #f1f0ea;
+  --tinte: #0f0f11;
+  --tinte-leise: #4a4a50;
+  --tinte-aus: #86868c;
+
+  --flaeche: #ffffff;
+  --flaeche-2: #f1f0ea;
+  --kante: #0f0f11;
+  --kante-stark: #0f0f11;
+
+  --brett-grund: #ffffff;
+  --linie: #0f0f11;
+  --linie-dicke: 2px;
+  --rahmen: 3px;
+  --rahmen-farbe: #0f0f11;
+  --radius-teil: 0px;
+  --teil-kante: 2px;
+
+  /*
+    Die Hilfslinie wird auf die Flächen gezeichnet und muss deshalb auf
+    Zinnoberrot, auf Chromgelb UND auf Schwarz zu sehen sein. Ein
+    halbdurchsichtiges Mittelgrau ist der einzige Ton, der das kann: über
+    Schwarz hellt es auf, über Gelb dunkelt es ab. Schwarz mit Alpha war die
+    erste Wahl und verschwand auf der schwarzen Fläche restlos.
+  */
+  --hilfslinie: rgba(122, 122, 122, .62);
+
+  --zahl-grund: #ffffff;
+  --zahl-tinte: #0f0f11;
+  --zahl-kante: #0f0f11;
+
+  /* Die fünf Flächen. Reihenfolge ist Absicht: die gierige Färbung in
+     app.js greift von vorne, also stehen die drei Grundfarben vorne und die
+     ruhigen Töne hinten. */
+  --f0: #d5202a;   /* Zinnoberrot */
+  --f1: #10429a;   /* Kobaltblau */
+  --f2: #f4c300;   /* Chromgelb */
+  --f3: #eeece4;   /* Grauweiß */
+  --f4: #16161a;   /* Schwarz */
+
+  --gut: #10429a;
+  --gut-flaeche: rgba(16, 66, 154, .22);
+  --fehler: #d5202a;
+  --fehler-flaeche: rgba(238, 236, 228, .88);
+  --fehler-strich: rgba(15, 15, 17, .62);
+  --tippfarbe: #f4c300;
+  --tipp-flaeche: rgba(244, 195, 0, .34);
+  --gewaehlt: #0f0f11;
+
+  /*
+    Die Kante der Vorschau ist hier SCHWARZ und nicht das Chromgelb.
+
+    Nachgerechnet: #f4c300 auf dem weißen Brettgrund ergibt 1,66:1. Für
+    eine Zierde wäre das eine Geschmacksfrage – nur ist #vorschau in
+    diesem Spiel auch der Zellcursor der Tastatur (app.js zeichnet ein
+    1×1-Rechteck ohne Urteil), und damit die einzige Fokusanzeige auf dem
+    Brett. WCAG 1.4.11 verlangt dafür 3:1, und ein Cursor, den man auf
+    Weiß nicht sieht, macht die Tastaturbedienung zum Ratespiel. Die
+    Füllung bleibt gelb (--tipp-flaeche), die Kante wird die Linienfarbe
+    des Stils – 19:1, und im Bild ist es genau der schwarze Strich, von
+    dem dieser Stil lebt.
+
+    Im Dunkeln liegt das Gelb auf tiefem Anthrazit bei 11,4:1. Dort wird
+    die Marke deshalb zurückgedreht: eine weiße Kante wäre nicht besser
+    lesbar, würde aber im Tipp-Ring mit dem elfenbeinfarbenen Innenring
+    verschmelzen.
+  */
+  --vorschau-kante: var(--linie);
+
+  /* Schwarz als Akzent, nicht Rot: ein gefüllter roter Knopf heißt in jeder
+     Oberfläche "Vorsicht", und "Fertig" ist keine Warnung. Rot bleibt der
+     Fläche und dem Neu-Knopf. */
+  --akzent: #0f0f11;
+  --akzent-tinte: #ffffff;
+  --akzent-leise: rgba(15, 15, 17, .07);
+  --verweis-farbe: #10429a;
+
+  --schalter-aus: #eeece4;
+  --schalter-knopf: #ffffff;
+
+  --hinweis-grund: #0f0f11;
+  --hinweis-tinte: #ffffff;
+
+  /*
+    Der Neu-Knopf trägt das Zinnoberrot – aber nicht dasselbe wie die Fläche.
+    Gemessen wurde: #e03a3f auf dem dunklen Kärtchen ergibt 3,7:1, und eine
+    fette Beschriftung mit 12 px ist nach WCAG normaler Text und braucht
+    4,5:1. Die Fläche darf satt bleiben (auf ihr steht keine Schrift), die
+    Beschriftung wird im Dunkeln aufgehellt.
+  */
+  --neu-farbe: #d5202a;
+
+  --fokus: #10429a;
+  --schleier: rgba(15, 15, 17, .55);
+
+  --radius: 0px;
+  --radius-klein: 0px;
+  --radius-blatt: 0px;
+  --schatten: none;
+  --schatten-hoch: none;
+
+  /* Sehr fett und geometrisch. Wer Futura oder Avenir hat, bekommt den
+     Auftritt, für den dieser Stil gebaut ist; alle anderen die fetteste
+     Systemschrift, die da ist. Eine mitgelieferte .woff2 wäre schöner und
+     wäre eine externe Datei mehr – das war der Handel. */
+  --schrift-zahl: 'Futura', 'Futura PT', 'Avenir Next', 'Avenir',
+                  'Helvetica Neue', 'Arial Black', system-ui, -apple-system,
+                  'Segoe UI', Roboto, Arial, sans-serif;
+  --zahl-gewicht: 900;
+  --zahl-sperrung: -.02em;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --grund: #17181a;
+    --grund-rand: #0c0d0e;
+    --tinte: #f5f5f2;
+    --tinte-leise: #b9b9b5;
+    --tinte-aus: #83837f;
+
+    --flaeche: #1f2124;
+    --flaeche-2: #272a2e;
+    --kante: #f5f5f2;
+    --kante-stark: #f5f5f2;
+
+    --brett-grund: #101114;
+    --linie: #f5f5f2;
+    --rahmen-farbe: #f5f5f2;
+    --hilfslinie: rgba(150, 150, 150, .62);
+
+    --zahl-grund: #f7f6f2;
+    --zahl-tinte: #101114;
+    /* Im Dunkeln ist die Kante des Plättchens dunkel und nicht weiß: das
+       Plättchen selbst ist elfenbein, und auf der hellen Fläche (--f4)
+       wäre eine elfenbeinfarbene Kante nicht da. */
+    --zahl-kante: #101114;
+
+    /*
+      Die drei Grundfarben bleiben, aufgehellt: Kobaltblau auf Anthrazit ist
+      sonst ein dunkles Loch, und eine Fläche soll eine Fläche sein.
+
+      Die fünfte Fläche ist im Dunkeln NICHT schwarz. Sie war es im ersten
+      Bild, und dort sah man sie nicht: eine schwarze Fläche auf tiefem
+      Anthrazit ist von einem leeren Kästchen nicht zu unterscheiden, und
+      "leer oder gelegt" ist die wichtigste Auskunft, die das Brett gibt.
+      Also übernimmt Elfenbein die Rolle, die in der hellen Fassung Schwarz
+      hat: der stille Gegenpol zu den drei Grundfarben.
+    */
+    --f0: #e03a3f;
+    --f1: #2f5ed8;
+    --f2: #f2c40f;
+    --f3: #3f434a;
+    --f4: #d6d3c9;
+
+    --gut: #7fa6ff;
+    --gut-flaeche: rgba(127, 166, 255, .26);
+    --fehler: #ff6a63;
+    --fehler-flaeche: rgba(63, 67, 74, .92);
+    --fehler-strich: rgba(245, 245, 242, .55);
+    --tippfarbe: #f2c40f;
+    --tipp-flaeche: rgba(242, 196, 15, .30);
+    /* Auf Anthrazit trägt das Gelb 11,4:1 – hier darf die Kante gelb sein. */
+    --vorschau-kante: var(--tippfarbe);
+    --gewaehlt: #f5f5f2;
+
+    --akzent: #f5f5f2;
+    --akzent-tinte: #101114;
+    --akzent-leise: rgba(245, 245, 242, .10);
+    --verweis-farbe: #9db8ff;
+
+    --schalter-aus: #3d4045;
+    --schalter-knopf: #f5f5f2;
+
+    --hinweis-grund: #f5f5f2;
+    --hinweis-tinte: #101114;
+
+    --neu-farbe: #ff9a94;
+
+    --fokus: #f2c40f;
+    --schleier: rgba(0, 0, 0, .66);
+
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --grund: #17181a;
+  --grund-rand: #0c0d0e;
+  --tinte: #f5f5f2;
+  --tinte-leise: #b9b9b5;
+  --tinte-aus: #83837f;
+
+  --flaeche: #1f2124;
+  --flaeche-2: #272a2e;
+  --kante: #f5f5f2;
+  --kante-stark: #f5f5f2;
+
+  --brett-grund: #101114;
+  --linie: #f5f5f2;
+  --rahmen-farbe: #f5f5f2;
+  --hilfslinie: rgba(150, 150, 150, .62);
+
+  --zahl-grund: #f7f6f2;
+  --zahl-tinte: #101114;
+  /* Im Dunkeln ist die Kante des Plättchens dunkel und nicht weiß: das
+     Plättchen selbst ist elfenbein, und auf der hellen Fläche (--f4)
+     wäre eine elfenbeinfarbene Kante nicht da. */
+  --zahl-kante: #101114;
+
+  /*
+    Die drei Grundfarben bleiben, aufgehellt: Kobaltblau auf Anthrazit ist
+    sonst ein dunkles Loch, und eine Fläche soll eine Fläche sein.
+
+    Die fünfte Fläche ist im Dunkeln NICHT schwarz. Sie war es im ersten
+    Bild, und dort sah man sie nicht: eine schwarze Fläche auf tiefem
+    Anthrazit ist von einem leeren Kästchen nicht zu unterscheiden, und
+    "leer oder gelegt" ist die wichtigste Auskunft, die das Brett gibt.
+    Also übernimmt Elfenbein die Rolle, die in der hellen Fassung Schwarz
+    hat: der stille Gegenpol zu den drei Grundfarben.
+  */
+  --f0: #e03a3f;
+  --f1: #2f5ed8;
+  --f2: #f2c40f;
+  --f3: #3f434a;
+  --f4: #d6d3c9;
+
+  --gut: #7fa6ff;
+  --gut-flaeche: rgba(127, 166, 255, .26);
+  --fehler: #ff6a63;
+  --fehler-flaeche: rgba(63, 67, 74, .92);
+  --fehler-strich: rgba(245, 245, 242, .55);
+  --tippfarbe: #f2c40f;
+  --tipp-flaeche: rgba(242, 196, 15, .30);
+  /* Auf Anthrazit trägt das Gelb 11,4:1 – hier darf die Kante gelb sein. */
+  --vorschau-kante: var(--tippfarbe);
+  --gewaehlt: #f5f5f2;
+
+  --akzent: #f5f5f2;
+  --akzent-tinte: #101114;
+  --akzent-leise: rgba(245, 245, 242, .10);
+  --verweis-farbe: #9db8ff;
+
+  --schalter-aus: #3d4045;
+  --schalter-knopf: #f5f5f2;
+
+  --hinweis-grund: #f5f5f2;
+  --hinweis-tinte: #101114;
+
+  --neu-farbe: #ff9a94;
+
+  --fokus: #f2c40f;
+  --schleier: rgba(0, 0, 0, .66);
+
+  color-scheme: dark;
+}
+
+/* --- Kopf: Titel in Versalien, darunter eine Komposition als Trennlinie -- */
+
+.kopf__titel {
+  text-transform: uppercase;
+  letter-spacing: .10em;
+  font-weight: 900;
+  font-family: var(--schrift-zahl);
+}
+
+.kopf__untertitel { letter-spacing: .04em; }
+
+/*
+  Die Trennlinie unter dem Kopf ist selbst eine kleine Flächenteilung –
+  drei Grundfarben und Grauweiß, durch schwarze Linien geschieden. Sie ist
+  das einzige Stück reine Dekoration in diesem Stil und darf es sein: sie
+  sagt in einem Blick, worum es im Spiel geht.
+
+  Als Rasterzelle in Zeile 3 gesetzt, nicht als eigenes Element: der
+  DOM-Vertrag legt die Kinder von .kopf fest, und ein Pseudo-Element ist
+  kein Kind, das jemand suchen könnte.
+*/
+.kopf::after {
+  content: "";
+  grid-column: 1 / -1;
+  grid-row: 3;
+  height: 7px;
+  margin-top: 6px;
+  background:
+    linear-gradient(90deg,
+      var(--f0)    0     20%,
+      var(--linie) 20%   calc(20% + 2px),
+      var(--f2)    calc(20% + 2px) 52%,
+      var(--linie) 52%   calc(52% + 2px),
+      var(--f3)    calc(52% + 2px) 70%,
+      var(--linie) 70%   calc(70% + 2px),
+      var(--f1)    calc(70% + 2px) 100%);
+  border: 2px solid var(--linie);
+  border-left: 0;
+  border-right: 0;
+}
+
+/* --- Kärtchen und Werkzeuge: eine Bank, keine Inseln ---------------------- */
+
+.hud, .leiste { gap: 0; }
+
+.karte, .werkzeug {
+  border-width: 2px;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* Die geteilte Kante ist EINE Linie. Mit negativen Rändern wäre sie es
+   auch, dann wären aber die Spalten nicht mehr gleich breit – bei fünf
+   Werkzeugen auf 366 px sieht man das. */
+.karte + .karte,
+.werkzeug + .werkzeug { border-left-width: 0; }
+
+.karte__marke, .werkzeug__text { letter-spacing: .08em; }
+
+.karte__wert { font-family: var(--schrift-zahl); font-weight: 900; }
+
+.werkzeug--neu { color: var(--neu-farbe); }
+.werkzeug--tipp { color: var(--tinte); }
+
+.werkzeug:disabled { background: var(--flaeche-2); }
+
+.symbolknopf { border-radius: 0; }
+
+/* --- Das Brett ----------------------------------------------------------- */
+
+.brett { --brett-radius: 0; --brett-schatten: none; }
+
+/* Zwei Pixel schwarzer Rand ums Plättchen statt einem: die Zahl steht auf
+   Zinnoberrot und auf Chromgelb, und ein Haarstrich verschwindet dort. */
+.zahl {
+  box-shadow: 0 0 0 2px var(--zahl-kante);
+  border-radius: 0;
+}
+
+/* Die gewählte Fläche bekommt einen breiten Innenrand in der Linienfarbe –
+   kein Farbwechsel, denn die Farbe der Fläche ist eine Aussage über ihre
+   Nachbarschaft und darf sich durch eine Berührung nicht ändern. */
+.teil--gewaehlt { box-shadow: inset 0 0 0 4px var(--gewaehlt); }
+
+/* --- Knöpfe, Wahlreihen, Formulare -------------------------------------- */
+
+.knopf,
+.wahl__option,
+.reiter,
+.stufe,
+.kuerzel__feld,
+.dlg__zu,
+.dlg__griff { border-radius: 0; }
+
+.knopf--voll,
+.knopf--rand,
+.wahl__option,
+.stufe,
+.reiter { border-width: 2px; }
+
+.knopf--voll { border-color: var(--akzent); }
+
+.knopf--voll:hover { filter: none; background: var(--f0); border-color: var(--f0); color: #ffffff; }
+
+.reiter { border-color: var(--kante); color: var(--tinte); }
+
+.stufe__name { font-family: var(--schrift-zahl); text-transform: uppercase; letter-spacing: .06em; }
+
+/* Ein eckiger Schalter braucht einen eckigen Knauf: der Kreis aus basis.css
+   wird durch einen Block ersetzt. */
+.schalter {
+  border-radius: 0;
+  background-image: linear-gradient(var(--schalter-knopf), var(--schalter-knopf));
+  background-size: 22px 22px;
+  background-position: left 3px center;
+}
+
+.schalter:checked {
+  background-position: right 3px center;
+  background-image: linear-gradient(var(--akzent-tinte), var(--akzent-tinte));
+}
+
+.kuerzel__feld { border-width: 2px; }
+
+/* --- Dialoge ------------------------------------------------------------- */
+
+.dlg__blatt {
+  border-radius: 0;
+  border-top: 4px solid var(--linie);
+  box-shadow: none;
+}
+
+.dlg__kopf {
+  border-bottom: 2px solid var(--linie);
+  padding-top: 16px;
+}
+
+.dlg__kopf h2 {
+  font-family: var(--schrift-zahl);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.dlg__fuss { border-top: 2px solid var(--linie); }
+
+.dlg__untertitel { color: var(--tinte); letter-spacing: .12em; }
+
+.ende__zeit { font-family: var(--schrift-zahl); font-weight: 900; }
+
+.beispiel__kante { stroke-width: 5; }
+
+/* --- Breite Schirme: das Band steht als Bild an der Wand ------------------
+
+   Auf einem großen Schirm bleibt ein 640 px breites Band übrig, und ringsum
+   viel Nichts. In diesem Stil ist das eine Gelegenheit: das Band bekommt
+   links und rechts eine schwarze Linie und wird damit zum Bildträger, und
+   in den Rand kommt eine ruhige Komposition aus drei Flächen.
+
+   Sie liegt auf html::before mit z-index -1, also HINTER dem Grund des
+   Bandes – so ist sichergestellt, dass sie niemals durch das Spielfeld
+   scheint, egal wie breit der Schirm wird. Ein Element hinter body
+   (body::before) hätte das nicht geleistet: dessen z-index gilt innerhalb
+   von body, und body malt seinen eigenen Grund darüber.
+
+   Bis 1000 px bleibt der Rand leer: bei einem 180 px schmalen Streifen
+   wären die Flächen Fetzen, und Fetzen sind keine Komposition.
+   ------------------------------------------------------------------------- */
+
+@media (min-width: 1000px) {
+  html::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-color: var(--grund-rand);
+    background-repeat: no-repeat;
+    background-image:
+      linear-gradient(var(--f1), var(--f1)),
+      linear-gradient(var(--f2), var(--f2)),
+      linear-gradient(var(--f0), var(--f0)),
+      linear-gradient(var(--linie), var(--linie));
+    background-size:
+      /* Blau links oben, Gelb darunter, Rot rechts unten, dazu eine
+         durchlaufende waagrechte Linie auf der Trennkante. Die Flächen sind
+         mit Absicht kleiner als der halbe Rand: bei 34vh und 40vh war der
+         Rand im Bild ein Farbfeld und die Komposition eine Behauptung. */
+      calc(50vw - var(--band) / 2 - 4px) 26vh,
+      calc(50vw - var(--band) / 2 - 4px) 15vh,
+      calc(50vw - var(--band) / 2 - 4px) 30vh,
+      100vw 4px;
+    background-position:
+      left top,
+      left calc(26vh + 4px),
+      right bottom,
+      left 26vh;
+  }
+
+  body {
+    border-left: 4px solid var(--linie);
+    border-right: 4px solid var(--linie);
+    max-width: calc(var(--band) + 8px);
+  }
+}

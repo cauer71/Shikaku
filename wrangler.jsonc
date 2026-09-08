@@ -1,0 +1,100 @@
+/**
+ * Cloudflare Workers mit statischen Assets - die fuer neue Projekte
+ * empfohlene Betriebsart. Pages ist der aeltere Weg und braucht fuer eine
+ * eigene Schnittstelle einen zweiten Dienst; hier liegt beides in einem.
+ *
+ * Ausgeliefert wird dist/ und NICHT der Projektordner. Zwei Gruende, beide
+ * gemessen und beide in tools/build-dist.mjs noch einmal ausgefuehrt:
+ *
+ *   1. wrangler legt sein eigenes .wrangler/ in den Projektordner. Steht der
+ *      Ordner zugleich unter Beobachtung, laedt der lokale Server endlos neu
+ *      ("Reloading local server" ohne Ende) und antwortet auf nichts mehr.
+ *      Ein Verzeichnis, in das man selbst schreibt, kann man nicht beobachten.
+ *   2. Sonst gingen Tests, Werkzeuge, Migrationen, README und package.json
+ *      mit hinaus. Oeffentlich sind sie im Repository ohnehin, auf der
+ *      Spielseite haben sie nichts verloren - und worker.js waere dann
+ *      zweimal da: einmal als ausgefuehrtes Skript, einmal als herunterladbare
+ *      Datei.
+ *
+ * Der Ordner entsteht mit "npm run build". Genau das gehoert bei Cloudflare
+ * in das Feld "Build command"; im Feld "Deploy command" steht
+ * "npx wrangler deploy".
+ *
+ * Die Domain haengt man im Dashboard an den Worker (Settings -> Domains &
+ * Routes -> Add -> Custom domain). Sie steht bewusst nicht hier: dann laesst
+ * sie sich aendern, ohne den Code anzufassen.
+ */
+{
+  "name": "shikaku",
+  "compatibility_date": "2026-09-01",
+
+  // Ein Skript steht vor den Dateien, weil die Rangliste in D1 liegt. Es
+  // beantwortet /api/* selbst und reicht alles andere ueber die
+  // ASSETS-Bindung an die Dateiauslieferung weiter.
+  "main": "worker.js",
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "shikaku",
+      // Kein Geheimnis: die ID benennt die Datenbank nur, sie oeffnet sie
+      // nicht. Wer lesen oder schreiben will, braucht ein Token des Kontos -
+      // darum steht sie hier im Klartext und nicht in den Secrets.
+      "database_id": "7a818833-d91d-4763-8667-f592e030f839",
+      // Gehoert IN die Bindung und nicht auf die oberste Ebene: dort meldet
+      // wrangler es als unbekanntes Feld und ignoriert es stillschweigend -
+      // "wrangler d1 migrations apply" findet dann keine Migrationen und
+      // sagt trotzdem, es sei alles in Ordnung.
+      "migrations_dir": "migrations"
+    }
+  ],
+
+  "assets": {
+    "directory": "./dist",
+
+    // Noetig, damit der Worker unbekannte Pfade an die Asset-Schicht
+    // zurueckgeben kann (env.ASSETS.fetch(request)). Ohne Bindung muesste
+    // etwas anderes davor raten, was Datei ist und was Schnittstelle.
+    "binding": "ASSETS",
+
+    // Bewusst NICHT "single-page-application": das liefert fuer jeden
+    // unbekannten Pfad index.html mit Status 200 - auch fuer ein fehlendes
+    // Icon, das dann stillschweigend HTML zurueckbekaeme und als kaputtes
+    // Bild endet. Mit "404-page" schlagen echte Fehler sichtbar fehl und
+    // Besucher landen auf 404.html.
+    "not_found_handling": "404-page",
+
+    // /icons -> /icons/ statt 404. Kostet nichts und verzeiht den Schraegstrich.
+    "html_handling": "auto-trailing-slash"
+  },
+
+  // Ratenbegrenzung fuer /api/*. Die Rangliste hat keine Konten - wer die
+  // Adresse kennt, kann senden. Pruefbar ist nur Form und Plausibilitaet
+  // (pruefePartie in worker.js), gegen schieres Draufhalten hilft das nicht.
+  // Diese Schranke schon.
+  //
+  // Gezaehlt wird je Cloudflare-Standort, nicht weltweit, und die Periode
+  // darf nur 10 oder 60 Sekunden sein - beides Vorgaben der Schnittstelle,
+  // jeder andere Wert laesst das Deployment scheitern.
+  //
+  // Schreiben ist knapper bemessen als Lesen: ein Shikaku dauert Minuten, die
+  // Rangliste sieht man sich zwischendurch oefter an. MIN_SEKUNDEN = 10 im
+  // Worker deckt dieselbe Flanke von der anderen Seite ab.
+  "ratelimits": [
+    {
+      "name": "SCHREIB_LIMIT",
+      "namespace_id": "1001",
+      "simple": { "limit": 10, "period": 60 }
+    },
+    {
+      "name": "LESE_LIMIT",
+      "namespace_id": "1002",
+      "simple": { "limit": 60, "period": 60 }
+    }
+  ],
+
+  // Ohne das gibt es im Fehlerfall nichts nachzusehen. Ein Spiel ohne
+  // Protokoll laesst sich nicht reparieren, und die Rangliste ist die eine
+  // Stelle, an der etwas von aussen hereinkommt.
+  "observability": { "enabled": true }
+}

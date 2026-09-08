@@ -1,0 +1,30 @@
+# Abhaengigkeiten. Das Spiel selbst hat keine; hier landet nur, was die
+# Werkzeuge sich fuer einen Lauf borgen (playwright-core fuer die Icons,
+# wrangler fuer das Veroeffentlichen). Nichts davon gehoert in den Verlauf.
+node_modules/
+
+# Das Auslieferungsverzeichnis. Es entsteht mit "npm run build" aus den
+# Dateien, die schon im Verlauf stehen - eine zweite Fassung derselben
+# Dateien einzuchecken hiesse, sie doppelt zu pflegen. Und beim Zusammenbau
+# wird es vorher restlos geloescht: was hier einchecken wuerde, waere beim
+# naechsten Lauf ohnehin weg.
+dist/
+
+# wrangler legt hier seinen Zwischenstand ab (lokale D1-Datei, Sitzungen,
+# Konfigurationsreste). Geraetegebunden und ohne Wert fuer andere.
+.wrangler/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Was Editoren und Betriebssysteme ungefragt dazulegen
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.sw?
+*.local
