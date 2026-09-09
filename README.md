@@ -215,18 +215,20 @@ nie aufhalten und nie mit einer Meldung stören.
 
 Der Leitgedanke ist keine Dekoration, sondern die Sache selbst: **Shikaku ist
 Mondrian.** Das Rätsel *ist* eine Flächenteilung in Rechtecke — genau das, was
-De Stijl gemalt hat. Der Standard-Skin macht das sichtbar: weißer Grund, harte
+De Stijl gemalt hat. Der Skin »Mondrian« macht das sichtbar: weißer Grund, harte
 schwarze Rasterlinien, die fertigen Rechtecke in Zinnoberrot, Kobaltblau,
 Chromgelb, Grauweiß und Schwarz, die Zahlen in einem sehr fetten geometrischen
 Schnitt. Dunkel wird der Grund zu tiefem Anthrazit, die Grundfarben bleiben.
 
-Drei Skins, jeder hell und dunkel:
+Fünf Skins, jeder hell und dunkel; Standard für neue Spieler ist `apple`:
 
 | Skin | Anmutung |
 |---|---|
-| `mondrian` | De Stijl. Der Auftritt des Spiels. |
+| `mondrian` | De Stijl. Der ursprüngliche Auftritt des Spiels. |
 | `papier` | Warmes Papier, pastellige Flächen, Bleistiftlinien. Ruhig fürs lange Spiel. |
-| `m3` | Material 3, damit es neben Zehner-Paare steht. |
+| `m3` | Material 3 Expressive: Tonflächen, schwebende Navigationspille, Tipp als Extended FAB. |
+| `m3plus` | Dieselbe Familie, mutiger: Primärfarbe als Kopfband, Stand als Chips, Brett in weißer Schale. |
+| `apple` | Apple/iOS: Large Title, gruppierte Karte mit Haarlinien, Werkzeuge als schwebende Glasleiste. |
 
 *Auto* folgt der Einstellung des Geräts. Eine bewusste Wahl schreibt
 `data-theme` und gewinnt dann in beide Richtungen.
@@ -338,9 +340,11 @@ i18n.js               Wörterbücher de/it/en
 online.js             Rangliste-Client
 worker.js             Cloudflare Worker — Servercode, geht NICHT nach dist/
 basis.css             Aufbau und Bauteile
-mondrian.css          Skin (Standard)
+mondrian.css          Skin
 papier.css            Skin
-m3.css m3-farben.css  Skin
+m3.css m3plus.css     Skin (teilen sich m3-farben.css)
+m3-farben.css         Rollenfarben für m3.css und m3plus.css
+apple.css             Skin (Standard)
 sw.js                 Offline-Speicher
 migrations/           D1-Schema
 tools/                dist/ und shikaku.html bauen, Icons, Manifeste, Prüfwerkzeuge

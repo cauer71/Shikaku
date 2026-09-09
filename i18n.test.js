@@ -39,7 +39,7 @@ einst.titel  einst.darstellung  einst.skin  einst.thema  einst.sprache
 einst.spiel  einst.kuerzel  einst.kuerzelHinweis  einst.welt  einst.weltHinweis
 einst.hilfslinien  einst.vibration  einst.ueber  einst.fassung  einst.quelle
 einst.rangliste  einst.zu
-skin.mondrian  skin.papier  skin.m3
+skin.mondrian  skin.papier  skin.m3  skin.m3plus  skin.apple
 thema.auto  thema.hell  thema.dunkel
 sprache.de  sprache.it  sprache.en
 ende.gewonnen  ende.zeit  ende.weltrekord  ende.persoenlich  ende.gleichstand
@@ -72,9 +72,9 @@ test('alle Schlüssel des Vertrags sind da', () => {
     const fehlen = VERTRAG.filter((k) => !(k in ist));
     assert.deepEqual(fehlen, [], `${spr}: Schlüssel aus dem Vertrag fehlen`);
   }
-  // 101 Schlüssel nennt der Vertrag – wenn diese Zahl kippt, ist beim
+  // 103 Schlüssel nennt der Vertrag – wenn diese Zahl kippt, ist beim
   // Abschreiben etwas verlorengegangen, nicht am Wörterbuch.
-  assert.equal(VERTRAG.length, 101);
+  assert.equal(VERTRAG.length, 103);
 });
 
 test('alle drei Sprachen haben denselben Schlüsselsatz', () => {
@@ -143,6 +143,8 @@ test('Namen werden nicht übersetzt', () => {
     const wb = texte(spr);
     assert.equal(wb['app.titel'], 'Shikaku', `${spr}: der Name des Rätsels wurde übersetzt`);
     assert.equal(wb['skin.m3'], 'Material 3', `${spr}: Material 3 ist ein Name`);
+    assert.equal(wb['skin.m3plus'], 'Material 3+', `${spr}: Material 3+ ist ein Name`);
+    assert.equal(wb['skin.apple'], 'Apple', `${spr}: Apple ist ein Name`);
     assert.equal(wb['skin.mondrian'], 'Mondrian', `${spr}: Mondrian ist ein Name`);
     // Die Sprachnamen stehen in jeder Oberfläche in der eigenen Sprache,
     // sonst findet ein Italiener sein "Italiano" in der deutschen
@@ -165,6 +167,7 @@ test('die engen Felder halten ihre Zeichengrenze', () => {
     'stufe.leicht': 10, 'stufe.mittel': 10, 'stufe.schwer': 10, 'stufe.experte': 10,
     'thema.auto': 8, 'thema.hell': 8, 'thema.dunkel': 8,
     'skin.mondrian': 12, 'skin.papier': 12, 'skin.m3': 12,
+    'skin.m3plus': 12, 'skin.apple': 12,
     'rang.platz': 10, 'rang.zeit': 10, 'rang.spieler': 12,
     'einst.zu': 10, 'ende.nochmal': 12, 'ende.zu': 12, 'neu.abbrechen': 12,
   };

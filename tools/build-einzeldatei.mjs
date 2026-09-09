@@ -69,8 +69,10 @@ const STILE = [
   { datei: 'basis.css', id: null },
   { datei: 'm3-farben.css', id: 'css-m3-farben' },
   { datei: 'm3.css', id: 'css-m3' },
+  { datei: 'm3plus.css', id: 'css-m3plus' },
   { datei: 'papier.css', id: 'css-papier' },
   { datei: 'mondrian.css', id: 'css-mondrian' },
+  { datei: 'apple.css', id: 'css-apple' },
 ];
 
 /* ------------------------------------------------------- die Module ------ */

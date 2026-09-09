@@ -36,10 +36,12 @@ const DATEIEN = [
   'app.js', 'brett.js', 'shikaku.js', 'loeser.js', 'erzeuger.js',
   'i18n.js', 'online.js',
 
-  // basis.css bringt Aufbau und Standardfarben, die drei Skins ueberschreiben
-  // danach nur Farben und Kanten. Alle vier muessen da sein: der Skin steht in
-  // den Einstellungen und kann jeder von ihnen sein, auch ohne Netz.
-  'basis.css', 'mondrian.css', 'papier.css', 'm3.css', 'm3-farben.css',
+  // basis.css bringt Aufbau und Standardfarben, die fuenf Skins ueberschreiben
+  // danach nur Farben, Kanten und ein paar Bauteile. Alle muessen da sein: der
+  // Skin steht in den Einstellungen und kann jeder von ihnen sein, auch ohne
+  // Netz. m3.css und m3plus.css teilen sich die Rollenfarben aus m3-farben.css.
+  'basis.css', 'mondrian.css', 'papier.css', 'm3.css', 'm3plus.css',
+  'm3-farben.css', 'apple.css',
 
   // Vier Manifeste. Das neutrale wird im Quelltext verwiesen, der
   // Startschnipsel haengt sofort auf die Sprachfassung um - und ein
