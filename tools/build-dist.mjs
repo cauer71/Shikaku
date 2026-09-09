@@ -54,8 +54,25 @@ const ZIEL = join(WURZEL, 'dist');
 /** Was ausgeliefert wird - alles andere auf der obersten Ebene nicht. */
 const ENDUNGEN = new Set(['.html', '.js', '.css', '.webmanifest']);
 
-/** Servercode. Gehoert zu wrangler, nicht in die Auslieferung. */
-const NICHT = new Set(['worker.js']);
+/**
+ * Was auf der obersten Ebene liegt, in die Regel passt und trotzdem NICHT
+ * ausgeliefert wird.
+ *
+ *   worker.js      Servercode. Gehoert zu wrangler, nicht in die Auslieferung.
+ *   shikaku.html   Die Einzeldatei-Fassung (tools/build-einzeldatei.mjs). Sie
+ *                  ist zum Verschicken da, nicht zum Ausliefern - auf der
+ *                  Seite steht das Spiel ja schon.
+ *
+ * shikaku.html ist die Kehrseite davon, dass hier nach einer REGEL kopiert
+ * wird und nicht nach einer Liste (die Begruendung dafuer steht oben). Die
+ * Regel nimmt eine neue CSS-Datei von selbst mit - und eben auch eine neue
+ * HTML-Datei, ob man will oder nicht. Gemessen an der veroeffentlichten Seite:
+ * 386 KB, die niemand anfragt, und die zwei eingebetteten Skripte der Datei
+ * standen als Pruefsummen in der Sicherheitsregel JEDER Antwort. Dazu lag
+ * unter /shikaku eine zweite, vom Servicearbeiter nicht betreute Abschrift des
+ * Spiels, die eine Suchmaschine haette finden koennen.
+ */
+const NICHT = new Set(['worker.js', 'shikaku.html']);
 
 /** Ordner, die ganz mitgehen. */
 const ORDNER = ['icons'];
@@ -221,7 +238,15 @@ if (swText) {
  * leere Tag).
  */
 const html = dabei.filter((name) => name.endsWith('.html'));
-const summen = [];
+/*
+ * Ein Set und keine Liste: index.html und 404.html tragen denselben
+ * Startschnipsel, und derselbe Inhalt ergibt dieselbe Pruefsumme. Zweimal
+ * dieselbe in der Kopfzeile wirkt nicht anders als einmal - sie steht nur in
+ * JEDER Antwort doppelt drin und liest sich wie ein Versehen. Genau das war
+ * auf der veroeffentlichten Seite zu sehen, als eine dritte HTML-Datei den
+ * Schnipsel ein weiteres Mal mitbrachte.
+ */
+const summen = new Set();
 for (const rel of html) {
   const text = await readFile(join(WURZEL, rel), 'utf8');
   const bloecke = [...text.matchAll(/<script(?![^>]*\ssrc=)[^>]*>([\s\S]*?)<\/script>/gi)];
@@ -232,10 +257,10 @@ for (const rel of html) {
     continue;
   }
   for (const block of bloecke) {
-    summen.push(`'sha256-${createHash('sha256').update(block[1], 'utf8').digest('base64')}'`);
+    summen.add(`'sha256-${createHash('sha256').update(block[1], 'utf8').digest('base64')}'`);
   }
 }
-if (!summen.length) {
+if (!summen.size) {
   meckern('In keiner HTML-Datei steht ein eingebettetes Skript - die '
     + 'Sicherheitsregel waere zu streng gebaut.');
 }
@@ -247,7 +272,7 @@ if (kopfText) {
   // im Kommentar darueber vor, und der soll lesbar bleiben.
   const gefuellt = kopfText.replace(
     /(Content-Security-Policy:[^\n]*?)SKRIPT_HASHES/,
-    (_, kopf) => kopf + summen.join(' '),
+    (_, kopf) => kopf + [...summen].join(' '),
   );
   if (gefuellt === kopfText) {
     meckern('_headers: SKRIPT_HASHES steht in keiner '
@@ -268,5 +293,5 @@ if (klagen.length) {
 }
 
 console.log(`dist/ angelegt: Fassung ${fassung}, ${dabei.length} Eintraege, `
-  + `${summen.length} Skript-Pruefsumme(n)`);
+  + `${summen.size} Skript-Pruefsumme(n)`);
 console.log(`  ${dabei.join(' ')}`);
