@@ -256,7 +256,11 @@ Jede Anweisung in der Migration trägt `IF NOT EXISTS`. Das Schema steht in
 Datei muss eine frische Datenbank vollständig anlegen.
 
 Die alte Datenbank `shikaku` bleibt vorerst unberührt stehen — sie ist der
-Rückfall, falls am übernommenen Bestand etwas nicht stimmt.
+Rückfall, falls am geteilten Bestand etwas nicht stimmt. **Übernommen wird von
+dort nichts:** eine Migration läuft immer in *einer* Datenbank und kann die
+andere nicht lesen, und ein roher Export von drüben trüge die alten,
+präfixlosen Namen wieder herein — also genau die Kollision, die der Präfix
+verhindert. Die Rangliste in `spiele` fängt darum leer an.
 
 ## Die Oberfläche
 
