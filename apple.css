@@ -1,0 +1,361 @@
+/* =========================================================================
+   Shikaku – Skin "Apple" (iOS / HIG)
+
+   Die Formensprache von iOS: Large Title, gruppierte Karte mit Haarlinien
+   statt einzelner Kärtchen, System-Tints in Pastell, Werkzeuge als
+   schwebende Glasleiste (backdrop-filter). Die Systemfarben sind die
+   offiziellen iOS-Werte (systemBlue, systemGreen, systemRed …), einmal für
+   hell und einmal für dunkel – Apple selbst pflegt diese zwei Fassungen,
+   nicht eine gedimmte Kopie der hellen.
+
+   Wie bei "Material 3" gilt: Namen und Geometrie kommen aus basis.css,
+   diese Datei liefert nur Marken und ein paar wenige, klar benannte
+   Bauteil-Abweichungen (die gruppierte HUD-Karte, die Glasleiste).
+   ========================================================================= */
+
+:root {
+  --grund: #f2f2f7;
+  --grund-rand: #e5e5ea;
+  --tinte: #000000;
+  --tinte-leise: #6c6c70;
+  --tinte-aus: #8e8e93;
+
+  --flaeche: #ffffff;
+  --flaeche-2: #e5e5ea;
+  --kante: rgba(60, 60, 67, .16);
+  --kante-stark: rgba(60, 60, 67, .36);
+
+  --brett-grund: #ffffff;
+  --linie: rgba(60, 60, 67, .29);
+  --linie-dicke: 1px;
+  --hilfslinie: rgba(60, 60, 67, .16);
+  /* Kein gezeichneter Rahmen: die Tiefe des Bretts kommt aus --brett-schatten,
+     nicht aus einer Linie. */
+  --rahmen: 0px;
+  --rahmen-farbe: transparent;
+  --radius-teil: 0px;
+  --teil-kante: 1px;
+
+  --zahl-grund: #ffffff;
+  --zahl-tinte: #000000;
+  --zahl-kante: rgba(60, 60, 67, .10);
+
+  /* Pastelltöne der iOS-Systemfarben (Blau, Orange, Grün, Lila, Pink) –
+     dieselbe Reihenfolge wie bei "Material 3", damit ein Rätsel auf beiden
+     Skins dieselben Flächen an denselben Stellen einfärbt. */
+  --f0: #d6e6ff;
+  --f1: #ffe2cc;
+  --f2: #d9f2e4;
+  --f3: #e9e2fb;
+  --f4: #ffd9ea;
+
+  --gut: #34c759;
+  --gut-flaeche: rgba(52, 199, 89, .16);
+  --fehler: #ff3b30;
+  --fehler-flaeche: rgba(255, 59, 48, .14);
+  --fehler-strich: rgba(255, 59, 48, .50);
+  --tippfarbe: #007aff;
+  --tipp-flaeche: rgba(0, 122, 255, .14);
+  --gewaehlt: #000000;
+
+  --akzent: #007aff;
+  --akzent-tinte: #ffffff;
+  --akzent-leise: rgba(0, 122, 255, .12);
+  --verweis-farbe: #007aff;
+
+  --schalter-aus: #e9e9eb;
+  --schalter-knopf: #ffffff;
+
+  --hinweis-grund: rgba(28, 28, 30, .92);
+  --hinweis-tinte: #ffffff;
+
+  --fokus: #007aff;
+  --schleier: rgba(0, 0, 0, .40);
+
+  /* Die Glasfläche der Werkzeugleiste – als eigene Marke, weil sie sich
+     zwischen hell und dunkel nicht nur abtönt, sondern die Seite wechselt
+     (weißes Glas im Hellen, dunkles im Dunkeln). */
+  --glas: rgba(255, 255, 255, .68);
+  --glas-rand: rgba(255, 255, 255, .75);
+
+  --radius: 16px;
+  --radius-klein: 7px;
+  --radius-blatt: 20px;
+  --schatten: 0 1px 2px rgba(0, 0, 0, .06);
+  --schatten-hoch: 0 -2px 20px rgba(0, 0, 0, .12);
+
+  --schrift: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue',
+             system-ui, sans-serif;
+  --schrift-zahl: -apple-system, BlinkMacSystemFont, 'SF Pro Rounded',
+                  'SF Pro Text', system-ui, sans-serif;
+  --zahl-gewicht: 600;
+  --zahl-sperrung: -.01em;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --grund: #000000;
+    --grund-rand: #000000;
+    --tinte: #ffffff;
+    --tinte-leise: #8d8d93;
+    --tinte-aus: #636366;
+
+    --flaeche: #1c1c1e;
+    --flaeche-2: #2c2c2e;
+    --kante: rgba(84, 84, 88, .55);
+    --kante-stark: rgba(84, 84, 88, .85);
+
+    --brett-grund: #1c1c1e;
+    --linie: rgba(84, 84, 88, .65);
+    --hilfslinie: rgba(84, 84, 88, .45);
+    --rahmen-farbe: transparent;
+
+    --zahl-grund: #2c2c2e;
+    --zahl-tinte: #ffffff;
+    --zahl-kante: rgba(0, 0, 0, .30);
+
+    --gut: #30d158;
+    --gut-flaeche: rgba(48, 209, 88, .20);
+    --fehler: #ff453a;
+    --fehler-flaeche: rgba(255, 69, 58, .18);
+    --fehler-strich: rgba(255, 69, 58, .55);
+    --tippfarbe: #0a84ff;
+    --tipp-flaeche: rgba(10, 132, 255, .20);
+    --gewaehlt: #ffffff;
+
+    --akzent: #0a84ff;
+    --akzent-tinte: #ffffff;
+    --akzent-leise: rgba(10, 132, 255, .18);
+    --verweis-farbe: #0a84ff;
+
+    --schalter-aus: #39393d;
+    --schalter-knopf: #ffffff;
+
+    --hinweis-grund: rgba(44, 44, 46, .92);
+    --hinweis-tinte: #ffffff;
+
+    --fokus: #0a84ff;
+    --schleier: rgba(0, 0, 0, .55);
+
+    --glas: rgba(28, 28, 30, .72);
+    --glas-rand: rgba(255, 255, 255, .12);
+
+    --schatten: 0 1px 2px rgba(0, 0, 0, .40);
+    --schatten-hoch: 0 -2px 24px rgba(0, 0, 0, .55);
+
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --grund: #000000;
+  --grund-rand: #000000;
+  --tinte: #ffffff;
+  --tinte-leise: #8d8d93;
+  --tinte-aus: #636366;
+
+  --flaeche: #1c1c1e;
+  --flaeche-2: #2c2c2e;
+  --kante: rgba(84, 84, 88, .55);
+  --kante-stark: rgba(84, 84, 88, .85);
+
+  --brett-grund: #1c1c1e;
+  --linie: rgba(84, 84, 88, .65);
+  --hilfslinie: rgba(84, 84, 88, .45);
+  --rahmen-farbe: transparent;
+
+  --zahl-grund: #2c2c2e;
+  --zahl-tinte: #ffffff;
+  --zahl-kante: rgba(0, 0, 0, .30);
+
+  --gut: #30d158;
+  --gut-flaeche: rgba(48, 209, 88, .20);
+  --fehler: #ff453a;
+  --fehler-flaeche: rgba(255, 69, 58, .18);
+  --fehler-strich: rgba(255, 69, 58, .55);
+  --tippfarbe: #0a84ff;
+  --tipp-flaeche: rgba(10, 132, 255, .20);
+  --gewaehlt: #ffffff;
+
+  --akzent: #0a84ff;
+  --akzent-tinte: #ffffff;
+  --akzent-leise: rgba(10, 132, 255, .18);
+  --verweis-farbe: #0a84ff;
+
+  --schalter-aus: #39393d;
+  --schalter-knopf: #ffffff;
+
+  --hinweis-grund: rgba(44, 44, 46, .92);
+  --hinweis-tinte: #ffffff;
+
+  --fokus: #0a84ff;
+  --schleier: rgba(0, 0, 0, .55);
+
+  --glas: rgba(28, 28, 30, .72);
+  --glas-rand: rgba(255, 255, 255, .12);
+
+  --schatten: 0 1px 2px rgba(0, 0, 0, .40);
+  --schatten-hoch: 0 -2px 24px rgba(0, 0, 0, .55);
+
+  color-scheme: dark;
+}
+
+/* --- Kopf: Large Title ---------------------------------------------------
+
+   Linksbündig statt zentriert, beide Symbolknöpfe rechts gruppiert – wie
+   bei "Material 3" über grid-column, ohne das Markup anzufassen.
+   ------------------------------------------------------------------------- */
+
+.kopf {
+  grid-template-columns: 1fr auto auto;
+  grid-template-rows: auto auto;
+  align-items: flex-end;
+  column-gap: 6px;
+  padding: 24px 20px 8px;
+}
+
+.kopf > .symbolknopf:first-child { grid-column: 2; grid-row: 1 / 3; }
+.kopf > .symbolknopf:last-child { grid-column: 3; grid-row: 1 / 3; }
+
+.kopf__titel, .kopf__untertitel { grid-column: 1; text-align: left; }
+.kopf__titel { font-size: 34px; font-weight: 700; letter-spacing: -.022em; line-height: 1.08; }
+.kopf__untertitel { font-size: 15px; }
+
+.symbolknopf {
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  color: var(--akzent);
+}
+.symbolknopf:hover { background: var(--akzent-leise); }
+
+/* --- HUD: eine gruppierte Karte statt drei Kärtchen ----------------------
+
+   iOS gruppiert zusammengehörige Werte in EINER Karte, getrennt durch
+   Haarlinien, nicht durch Zwischenraum. .hud selbst wird zur Karte (Rand,
+   Schatten, Radius, weißer Grund); die drei .karte werden zu bloßen
+   Abschnitten darin. Nur die mittlere („Offen“) bekommt die beiden
+   Haarlinien, weil nur sie beidseitig einen Nachbarn hat.
+   ------------------------------------------------------------------------- */
+
+.hud {
+  gap: 0;
+  margin: 10px 16px 12px;
+  padding: 0;
+  background: var(--flaeche);
+  border-radius: var(--radius);
+  box-shadow: var(--schatten);
+  overflow: hidden;
+}
+
+.karte {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 12px 8px;
+}
+
+#karte-offen { box-shadow: inset 1px 0 0 var(--kante), inset -1px 0 0 var(--kante); }
+
+.karte__marke { font-size: 13px; font-weight: 400; text-transform: none; letter-spacing: 0; }
+.karte__wert { font-size: 22px; font-weight: 600; letter-spacing: -.01em; }
+.karte__notiz { color: var(--tinte-aus); }
+
+#karte-stufe .karte__wert { color: var(--verweis-farbe); }
+
+/* --- Brett ---------------------------------------------------------------- */
+
+.brett {
+  --brett-radius: 6px;
+  --brett-schatten: 0 1px 3px rgba(0, 0, 0, .10), 0 8px 24px rgba(0, 0, 0, .05);
+}
+
+.brett::after { border: 0; }
+
+/* Kein Ring, dafür ein weicher Schatten – die einzige der drei neuen Skins,
+   die das Zahlenplättchen so freistellt. */
+.zahl { box-shadow: 0 1px 2px rgba(0, 0, 0, .10); }
+
+.teil--gewaehlt { box-shadow: inset 0 0 0 3px var(--gewaehlt); }
+
+/* --- Werkzeugleiste: schwebendes Glas ------------------------------------- */
+
+.leiste {
+  margin: 0 12px 14px;
+  padding: 8px 6px;
+  gap: 2px;
+  background: var(--glas);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-radius: 26px;
+  box-shadow: inset 0 0 0 1px var(--glas-rand), 0 8px 30px rgba(0, 0, 0, .12);
+}
+
+.werkzeug {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--akzent);
+  border-radius: 20px;
+  gap: 3px;
+}
+
+.werkzeug__text { font-size: 11px; font-weight: 400; }
+
+.werkzeug:hover:not(:disabled) { background: var(--akzent-leise); }
+.werkzeug:active:not(:disabled) { background: var(--akzent-leise); }
+
+.werkzeug:disabled { background: transparent; color: var(--tinte-aus); }
+
+.werkzeug--tipp { background: var(--akzent-leise); }
+.werkzeug--tipp .werkzeug__text { font-weight: 600; }
+
+.werkzeug--neu { color: var(--akzent); }
+.werkzeug--neu:disabled { color: var(--tinte-aus); }
+
+/* --- Knöpfe, Formulare, Dialoge -------------------------------------------- */
+
+.wahl__option {
+  border-width: 1px;
+  border-color: var(--kante-stark);
+  background: var(--flaeche);
+}
+
+.wahl__option[aria-pressed="true"],
+.wahl__option[aria-checked="true"],
+.wahl__option--gewaehlt,
+.wahl__option.ist-an {
+  background: var(--akzent);
+  border-color: var(--akzent);
+}
+
+.stufe { border-radius: var(--radius); }
+
+.dlg__blatt { border-radius: var(--radius-blatt) var(--radius-blatt) 0 0; }
+.dlg__griff { opacity: .35; }
+
+/* Der iOS-Schalter: keine Kontur, ein weißer Knauf mit eigenem Schatten,
+   eingeschaltet in Systemgrün statt in der Akzentfarbe – auf dem iPhone ist
+   der Schalter grün, unabhängig davon, welche Farbe der Rest der App trägt. */
+.schalter {
+  border: 0;
+  background-color: var(--schalter-aus);
+  background-image: radial-gradient(circle at 50% 50%,
+    var(--schalter-knopf) 0 46%, transparent 48%);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .04);
+}
+
+.schalter:checked {
+  background-color: var(--gut);
+  border-color: var(--gut);
+}
+
+/* --- Breite Schirme ------------------------------------------------------- */
+
+@media (min-width: 1000px) {
+  html { background: var(--grund-rand); }
+  body { box-shadow: 0 0 0 1px var(--kante); }
+}

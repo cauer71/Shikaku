@@ -144,6 +144,8 @@ const TEXTE = {
     'skin.mondrian': 'Mondrian',
     'skin.papier': 'Papier',
     'skin.m3': 'Material 3',
+    'skin.m3plus': 'Material 3+',
+    'skin.apple': 'Apple',
 
     'thema.auto': 'Auto',
     'thema.hell': 'Hell',
@@ -320,6 +322,8 @@ const TEXTE = {
     'skin.mondrian': 'Mondrian',
     'skin.papier': 'Carta',
     'skin.m3': 'Material 3',
+    'skin.m3plus': 'Material 3+',
+    'skin.apple': 'Apple',
 
     'thema.auto': 'Auto',
     'thema.hell': 'Chiaro',
@@ -462,6 +466,8 @@ const TEXTE = {
     'skin.mondrian': 'Mondrian',
     'skin.papier': 'Paper',
     'skin.m3': 'Material 3',
+    'skin.m3plus': 'Material 3+',
+    'skin.apple': 'Apple',
 
     'thema.auto': 'Auto',
     'thema.hell': 'Light',

@@ -91,7 +91,7 @@ const speicher = {
    ======================================================================== */
 
 const STANDARD_EINST = {
-  skin: 'mondrian',
+  skin: 'apple',
   thema: 'auto',
   sprache: '',          // leer heißt: der Sprache des Geräts folgen
   kuerzel: '',
@@ -100,7 +100,7 @@ const STANDARD_EINST = {
   vibration: true,
 };
 
-const SKINS = ['mondrian', 'papier', 'm3'];
+const SKINS = ['mondrian', 'papier', 'm3', 'm3plus', 'apple'];
 const THEMEN = ['auto', 'hell', 'dunkel'];
 
 /**
@@ -378,7 +378,7 @@ function naechstesBild() {
  * schon im Speicher, `disabled` kostet nur einen neuen Stilabgleich.
  */
 function zeigeDarstellung() {
-  const skin = SKINS.includes(einst.skin) ? einst.skin : 'mondrian';
+  const skin = SKINS.includes(einst.skin) ? einst.skin : 'apple';
   elWurzel.dataset.skin = skin;
 
   const schalte = (kennung, an) => {
@@ -388,7 +388,10 @@ function zeigeDarstellung() {
   schalte('css-mondrian', skin === 'mondrian');
   schalte('css-papier', skin === 'papier');
   schalte('css-m3', skin === 'm3');
-  schalte('css-m3-farben', skin === 'm3');
+  schalte('css-m3plus', skin === 'm3plus');
+  schalte('css-apple', skin === 'apple');
+  // m3-farben.css liefert die Rollenfarben für beide Material-Skins.
+  schalte('css-m3-farben', skin === 'm3' || skin === 'm3plus');
 
   // "auto" setzt gar kein Attribut und folgt damit prefers-color-scheme; nur
   // eine bewusste Wahl schreibt data-theme und gewinnt dann in beide
@@ -1429,7 +1432,7 @@ function zeigeWahl(kennung, wert) {
 }
 
 function zeigeEinstellungen() {
-  zeigeWahl('wahl-skin', SKINS.includes(einst.skin) ? einst.skin : 'mondrian');
+  zeigeWahl('wahl-skin', SKINS.includes(einst.skin) ? einst.skin : 'apple');
   zeigeWahl('wahl-thema', THEMEN.includes(einst.thema) ? einst.thema : 'auto');
   // Die Sprachreihe zeigt die WIRKSAME Sprache, nicht den gespeicherten
   // Wert: ohne eigene Wahl folgt das Spiel dem Gerät, und dann soll der

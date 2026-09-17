@@ -58,7 +58,9 @@
   --hilfslinie: var(--md-sys-color-outline-variant, #c5c5d9);
   --rahmen: 1px;
   --rahmen-farbe: var(--md-sys-color-outline, #767588);
-  --radius-teil: 10px;
+  /* Scharfkantig statt gerundet: eine gezogene Fläche ist ein Ergebnis, kein
+     Bauteil, und Material rundet nur Bauteile. */
+  --radius-teil: 0px;
   --teil-kante: 1px;
 
   --zahl-grund: var(--md-sys-color-surface-container-lowest, #ffffff);
@@ -118,9 +120,10 @@
   --fokus: var(--md-sys-color-primary, #1956cd);
   --schleier: color-mix(in srgb, var(--md-sys-color-scrim, #000000) 42%, transparent);
 
-  /* Die Radien von Material 3: 12 für Karten, 8 für Chips, 28 für das
-     Bottom Sheet. */
-  --radius: 12px;
+  /* Die Radien von Material 3 Expressive: großzügiger als die klassische
+     Fassung – 20 für Karten und Werkzeuge, 8 für Chips und Zahlenplättchen,
+     28 für das Bottom Sheet. */
+  --radius: 20px;
   --radius-klein: 8px;
   --radius-blatt: 28px;
 
@@ -144,11 +147,47 @@
    Brett und an den Chips.
    ------------------------------------------------------------------------- */
 
+/*
+  Kopf und Kärtchen linksbündig statt symmetrisch: Expressive stellt den
+  Titel als Ansage an den Rand und nicht als Mitte der Bühne. Die beiden
+  Symbolknöpfe bleiben, wo sie im DOM stehen (das Regelwerk erlaubt keinen
+  Wrapper), rücken aber über grid-column zusammen auf die rechte Seite –
+  derselbe Kniff wie bei "Apple" weiter unten.
+*/
+.kopf {
+  grid-template-columns: 1fr auto auto;
+  grid-template-rows: auto auto;
+  align-items: flex-start;
+  column-gap: 8px;
+  padding: 22px 16px 6px;
+}
+
+.kopf > .symbolknopf:first-child { grid-column: 2; grid-row: 1 / 3; }
+.kopf > .symbolknopf:last-child { grid-column: 3; grid-row: 1 / 3; }
+
+.kopf__titel, .kopf__untertitel { grid-column: 1; text-align: left; }
+.kopf__titel { font-size: 30px; font-weight: 700; letter-spacing: -.01em; }
+.kopf__untertitel { font-size: 14px; }
+
+.symbolknopf {
+  background: var(--md-sys-color-surface-container, #ededf5);
+  color: var(--md-sys-color-on-surface-variant, #454556);
+}
+.symbolknopf:hover { background: var(--md-sys-color-surface-container-high, #e8e7ef); }
+.symbolknopf:active { background: var(--md-sys-color-surface-container-highest, #e2e2e9); }
+
+.hud { align-items: start; }
+
 .karte {
+  align-items: flex-start;
+  text-align: left;
+  padding: 12px 14px;
   border: 0;
   background: var(--md-sys-color-surface-container, #ededf5);
   box-shadow: none;
 }
+
+.karte__wert { font-size: 24px; }
 
 .karte--knopf { background: var(--md-sys-color-secondary-container, #ffd7f6); }
 .karte--knopf:hover { background: var(--md-sys-color-secondary-container, #ffd7f6); filter: brightness(.97); }
@@ -161,19 +200,41 @@
   durchlaufende Fläche, in der die Ziele als Symbol mit Beschriftung stehen,
   ohne eigene Kästchen. Der aktive Zustand ist ein Pillenhintergrund hinter
   dem Symbol – hier zeigt er, dass ein Werkzeug bereitsteht.
+
+  Tipp bricht aus dieser Reihe aus: er ist die eine Handlung, die in fast
+  jedem Zug gebraucht wird, und bekommt darum eine eigene Zeile als Extended
+  FAB – volle Breite, Symbol UND Wort nebeneinander statt übereinander. Die
+  vier übrigen Werkzeuge bleiben zu einer Pille zusammengefasst.
+
+  Das Raster bekommt dafür grid-template-areas statt der festen Fünferreihe
+  aus basis.css; die Zuordnung geschieht über die Kennungen aus dem
+  DOM-Vertrag (#btn-…), nicht über eine neue Reihenfolge im Markup – die
+  Knöpfe bleiben dort stehen, wo der Vertrag sie verlangt.
 */
 .leiste {
-  gap: 0;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-areas:
+    "tipp tipp tipp tipp"
+    "zurueck vor leeren neu";
+  gap: 8px;
+  margin: 0 12px 18px;
+  padding: 8px;
   background: var(--md-sys-color-surface-container, #ededf5);
-  border-radius: 0;
+  border-radius: 28px;
 }
+
+#btn-zurueck { grid-area: zurueck; }
+#btn-vor { grid-area: vor; }
+#btn-tipp { grid-area: tipp; }
+#btn-leeren { grid-area: leeren; }
+#btn-neu { grid-area: neu; }
 
 .werkzeug {
   border: 0;
   background: transparent;
   box-shadow: none;
   color: var(--md-sys-color-on-surface-variant, #454556);
-  border-radius: 16px;
+  border-radius: 20px;
   gap: 3px;
 }
 
@@ -185,16 +246,34 @@
 .werkzeug--neu { color: var(--md-sys-color-primary, #1956cd); }
 .werkzeug--neu:disabled { color: var(--md-sys-color-outline, #767588); }
 
+.werkzeug--tipp {
+  flex-direction: row;
+  gap: 8px;
+  min-height: 56px;
+  margin-bottom: 8px;
+  background: var(--md-sys-color-primary, #1956cd);
+  color: var(--md-sys-color-on-primary, #ffffff);
+  font-weight: 700;
+  font-size: 16px;
+}
+.werkzeug--tipp .werkzeug__text { font-size: 16px; }
+.werkzeug--tipp:hover:not(:disabled) { background: var(--md-sys-color-primary, #1956cd); filter: brightness(1.08); }
+.werkzeug--tipp:active:not(:disabled) { background: var(--md-sys-color-primary, #1956cd); filter: brightness(.94); }
+
 /* --- Brett --------------------------------------------------------------- */
 
+/* Nur sehr leicht gerundet: das Brett ist eine Fläche zum Zählen, keine
+   Karte – ein großer Radius würde die Ecken des Rasters selbst verzerren. */
 .brett {
-  --brett-radius: 16px;
+  --brett-radius: 6px;
   --brett-schatten: none;
 }
 
-.brett::after { border-radius: 16px; }
+.brett::after { border-radius: 6px; }
 
-.zahl { box-shadow: 0 0 0 1px var(--zahl-kante); }
+/* Kein Ring ums Zahlenplättchen: die Fläche dahinter trägt schon genug
+   Kontrast, ein zusätzlicher Umriss war in der Vorlage nur Lärm. */
+.zahl { box-shadow: none; }
 
 .teil--gewaehlt { box-shadow: inset 0 0 0 3px var(--gewaehlt); }
 

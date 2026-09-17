@@ -1,0 +1,339 @@
+/* =========================================================================
+   Shikaku – Skin "Material 3+" (Farbband)
+
+   Dieselbe Rollenfarben-Tabelle wie "Material 3" (m3-farben.css) und
+   dieselbe Vorliebe für großzügige Radien – nur mutiger im Auftritt: die
+   Primärfarbe steht als volles Kopfband da, Zeit und Stand werden zu Chips
+   auf diesem Band, und das Brett liegt in einer weißen Schale, die sich
+   unter dem Band hervorschiebt (ein iOS-„Bottom Sheet“-Bild, aber in
+   Material-Sprache). Für alles, was diese Vorlage nicht zeigt (Dialoge,
+   Rangliste, Formularfelder), gilt dieselbe Note wie bei "Material 3".
+   ========================================================================= */
+
+:root {
+  --grund: var(--md-sys-color-background, #f9f9ff);
+  --grund-rand: var(--md-sys-color-surface-dim, #dad9e1);
+  --tinte: var(--md-sys-color-on-surface, #1b1b20);
+  --tinte-leise: var(--md-sys-color-on-surface-variant, #454556);
+  --tinte-aus: var(--md-sys-color-outline, #767588);
+
+  --flaeche: var(--md-sys-color-surface-container-low, #f3f3fb);
+  --flaeche-2: var(--md-sys-color-surface-container-high, #e8e7ef);
+  --kante: var(--md-sys-color-outline-variant, #c5c5d9);
+  --kante-stark: var(--md-sys-color-outline, #767588);
+
+  --brett-grund: var(--md-sys-color-surface-container-lowest, #ffffff);
+  --linie: var(--md-sys-color-outline, #767588);
+  --linie-dicke: 1px;
+  --hilfslinie: var(--md-sys-color-outline-variant, #c5c5d9);
+  --rahmen: 1px;
+  --rahmen-farbe: var(--md-sys-color-outline, #767588);
+  --radius-teil: 0px;
+  --teil-kante: 1px;
+
+  --zahl-grund: var(--md-sys-color-surface-container-lowest, #ffffff);
+  --zahl-tinte: var(--md-sys-color-on-surface, #1b1b20);
+  --zahl-kante: var(--md-sys-color-outline-variant, #c5c5d9);
+
+  --f0: var(--md-sys-color-primary-fixed, #e0e0ff);
+  --f1: var(--md-sys-color-tertiary-fixed-dim, #ffb4a9);
+  --f2: var(--md-sys-color-secondary-fixed, #ffd7f6);
+  --f3: var(--md-sys-color-primary-fixed-dim, #c0c1fe);
+  --f4: var(--md-sys-color-tertiary-fixed, #ffdad5);
+
+  --gut: var(--md-sys-color-tertiary, #98453d);
+  --gut-flaeche: var(--md-sys-color-tertiary-container, #ffdad5);
+  --fehler: var(--md-sys-color-error, #bf0420);
+  --fehler-flaeche: var(--md-sys-color-error-container, #ffdad5);
+  --fehler-strich: color-mix(in srgb, var(--md-sys-color-error, #bf0420) 45%, transparent);
+  --tippfarbe: var(--md-sys-color-primary, #1956cd);
+  --tipp-flaeche: var(--md-sys-color-primary-container, #e0e0ff);
+  --gewaehlt: var(--md-sys-color-primary, #1956cd);
+
+  --akzent: var(--md-sys-color-primary, #1956cd);
+  --akzent-tinte: var(--md-sys-color-on-primary, #ffffff);
+  --akzent-leise: var(--md-sys-color-surface-container-high, #e8e7ef);
+  --verweis-farbe: var(--md-sys-color-primary, #1956cd);
+
+  --schalter-aus: var(--md-sys-color-surface-container-highest, #e2e2e9);
+  --schalter-knopf: var(--md-sys-color-outline, #767588);
+
+  --hinweis-grund: var(--md-sys-color-inverse-surface, #303036);
+  --hinweis-tinte: var(--md-sys-color-inverse-on-surface, #f0f0f8);
+
+  --fokus: var(--md-sys-color-primary, #1956cd);
+  --schleier: color-mix(in srgb, var(--md-sys-color-scrim, #000000) 42%, transparent);
+
+  --radius: 20px;
+  --radius-klein: 8px;
+  --radius-blatt: 28px;
+  --schatten: 0 1px 2px rgba(0, 0, 0, .18), 0 1px 3px 1px rgba(0, 0, 0, .10);
+  --schatten-hoch: 0 -1px 3px rgba(0, 0, 0, .14), 0 -8px 24px 4px rgba(0, 0, 0, .18);
+
+  --schrift: 'Roboto Flex', Roboto, system-ui, -apple-system, 'Segoe UI',
+             'Helvetica Neue', Arial, sans-serif;
+  --schrift-zahl: 'Roboto Flex', Roboto, system-ui, -apple-system, 'Segoe UI',
+                  'Helvetica Neue', Arial, sans-serif;
+  --zahl-gewicht: 700;
+  --zahl-sperrung: 0;
+}
+
+/* --- Das Farbband: Kopf und HUD werden eins --------------------------------
+
+   Beide bekommen dieselbe Primärfarbe und denselben weißen Text, ohne
+   Zwischenraum – aus zwei Abschnitten wird optisch ein Band. Das Brett
+   danach (.feld) bekommt seinerseits einen eigenen, hellen Grund mit
+   gerundeten oberen Ecken: die „Schale“, die sich unter dem Band
+   hervorschiebt. Keines von beidem braucht ein neues Element – nur eigene
+   Hintergründe auf den Abschnitten, die im DOM-Vertrag schon dastehen.
+   ------------------------------------------------------------------------- */
+
+.kopf {
+  grid-template-columns: 1fr auto auto;
+  grid-template-rows: auto auto;
+  align-items: flex-start;
+  column-gap: 6px;
+  padding: 20px 20px 0;
+  background: var(--akzent);
+  color: var(--akzent-tinte);
+}
+
+.kopf > .symbolknopf:first-child { grid-column: 2; grid-row: 1 / 3; }
+.kopf > .symbolknopf:last-child { grid-column: 3; grid-row: 1 / 3; }
+
+.kopf__titel, .kopf__untertitel { grid-column: 1; text-align: left; }
+.kopf__titel { font-size: 32px; font-weight: 700; letter-spacing: -.015em; }
+.kopf__untertitel {
+  font-size: 14px;
+  color: color-mix(in srgb, var(--akzent-tinte) 78%, transparent);
+}
+
+/*
+  Die Kreise und Chips auf dem Farbband kommen von --akzent-tinte gemischt
+  mit Transparenz statt von festem Weiß: --akzent-tinte dreht sich im
+  Dunkeln um (m3-farben.css macht aus der Primärfarbe dort einen hellen
+  Ton mit DUNKLER Beschriftung), und festes Weiß hätte dort auf hellem
+  Lila fast keinen Kontrast mehr gehabt.
+*/
+.symbolknopf {
+  background: color-mix(in srgb, var(--akzent-tinte) 16%, transparent);
+  color: var(--akzent-tinte);
+}
+.symbolknopf:hover { background: color-mix(in srgb, var(--akzent-tinte) 26%, transparent); }
+.symbolknopf:active { background: color-mix(in srgb, var(--akzent-tinte) 32%, transparent); }
+
+/* Aus dem Drei-Spalten-Raster der Kärtchen wird eine Chip-Zeile, die sich
+   umbricht statt in gleich breite Spalten zu zwingen – "Zeit" und "Offen"
+   sind kurz, "Mittel · 8 × 8" ist es nicht, und Material-Chips sind so
+   breit wie ihr Inhalt. */
+.hud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 18px 20px 22px;
+  background: var(--akzent);
+}
+
+.karte {
+  flex: none;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 7px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--akzent-tinte) 18%, transparent);
+  color: var(--akzent-tinte);
+  box-shadow: none;
+}
+
+.karte__marke {
+  font-size: 12px;
+  letter-spacing: .06em;
+  color: color-mix(in srgb, var(--akzent-tinte) 82%, transparent);
+}
+
+.karte__wert { font-size: 17px; line-height: 1; }
+.karte__notiz { display: none; }
+
+.karte--knopf {
+  background: var(--md-sys-color-secondary-fixed, #ffd7f6);
+  color: var(--md-sys-color-on-secondary-fixed, #2e102a);
+}
+.karte--knopf .karte__marke { color: inherit; }
+.karte--knopf:hover { filter: brightness(.97); }
+
+.feld {
+  background: var(--grund);
+  border-radius: 32px 32px 0 0;
+  padding: 16px 12px 8px;
+}
+
+/* --- Werkzeugleiste: fünf eigenständige Kacheln, Tipp als breite ---------
+
+   Anders als bei "Material 3" bleiben die fünf Werkzeuge eigene Kacheln
+   (wie im Standard-Skin) statt einer gemeinsamen Pille – nur Tipp wächst
+   über flex-grow zur breiten, gefüllten Taste, und die vier stillen
+   Werkzeuge werden zu reinen Symbolknöpfen: der Text bleibt für
+   Vorlesehilfen da, verschwindet aber optisch wie mit .sr-only.
+   ------------------------------------------------------------------------- */
+
+.leiste {
+  display: flex;
+  gap: 8px;
+  margin: 0;
+  padding: 14px 0 18px;
+  background: transparent;
+}
+
+.werkzeug {
+  flex: none;
+  width: 56px;
+  height: 56px;
+  min-height: 56px;
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+  border-radius: 18px;
+  background: var(--md-sys-color-surface-container, #ededf5);
+  color: var(--md-sys-color-on-surface-variant, #454556);
+}
+
+.werkzeug .werkzeug__text {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+
+.werkzeug:hover:not(:disabled) { background: var(--md-sys-color-surface-container-high, #e8e7ef); }
+.werkzeug:active:not(:disabled) { background: var(--md-sys-color-surface-container-highest, #e2e2e9); }
+
+.werkzeug:disabled {
+  background: var(--md-sys-color-surface-container-low, #f3f3fb);
+  color: var(--md-sys-color-outline, #767588);
+}
+
+.werkzeug--neu {
+  background: var(--md-sys-color-primary-fixed, #e0e0ff);
+  color: var(--md-sys-color-on-primary-fixed-variant, #0040a2);
+}
+.werkzeug--neu:disabled { background: var(--md-sys-color-surface-container-low, #f3f3fb); color: var(--md-sys-color-outline, #767588); }
+
+.werkzeug--tipp {
+  flex: 1 1 auto;
+  width: auto;
+  gap: 9px;
+  background: var(--md-sys-color-primary, #1956cd);
+  color: var(--md-sys-color-on-primary, #ffffff);
+  font-weight: 700;
+}
+
+.werkzeug--tipp .werkzeug__text {
+  position: static; width: auto; height: auto; padding: 0; margin: 0;
+  overflow: visible; clip-path: none; white-space: nowrap; border: 0;
+  font-size: 16px;
+}
+
+.werkzeug--tipp:hover:not(:disabled) { filter: brightness(1.08); }
+.werkzeug--tipp:active:not(:disabled) { filter: brightness(.94); }
+
+/* --- Brett --------------------------------------------------------------- */
+
+.brett {
+  --brett-radius: 6px;
+  --brett-schatten: 0 1px 2px rgba(0, 0, 0, .14), 0 6px 20px rgba(25, 86, 205, .10);
+}
+
+.brett::after { border-radius: 6px; }
+
+.zahl { box-shadow: none; border-radius: 10px; }
+
+.teil--gewaehlt { box-shadow: inset 0 0 0 3px var(--gewaehlt); }
+
+/* --- Chips, Knöpfe, Schalter ----------------------------------------------
+   Dieselbe Note wie "Material 3": Filter-Chips mit 8 px statt Pille, Reiter
+   und Stufen im Container-Ton, der Schalter mit wanderndem Knauf.
+   ------------------------------------------------------------------------- */
+
+.wahl__option {
+  border-radius: var(--radius-klein);
+  border-color: var(--md-sys-color-outline, #767588);
+  background: transparent;
+}
+
+.wahl__option[aria-pressed="true"],
+.wahl__option[aria-checked="true"],
+.wahl__option--gewaehlt,
+.wahl__option.ist-an {
+  background: var(--md-sys-color-secondary-container, #ffd7f6);
+  border-color: var(--md-sys-color-secondary-container, #ffd7f6);
+  color: var(--md-sys-color-on-secondary-container, #2e102a);
+}
+
+.reiter {
+  border: 0;
+  background: var(--md-sys-color-surface-container-high, #e8e7ef);
+  color: var(--md-sys-color-on-surface-variant, #454556);
+}
+
+.reiter[aria-selected="true"],
+.reiter[aria-pressed="true"],
+.reiter--gewaehlt,
+.reiter.ist-an {
+  background: var(--md-sys-color-primary, #1956cd);
+  color: var(--md-sys-color-on-primary, #ffffff);
+}
+
+.stufe {
+  border: 0;
+  background: var(--md-sys-color-surface-container-high, #e8e7ef);
+  border-radius: var(--radius);
+}
+
+.stufe:hover { background: var(--md-sys-color-surface-container-highest, #e2e2e9); }
+
+.knopf--rand { border-color: var(--md-sys-color-outline, #767588); }
+
+.schalter {
+  border-color: var(--md-sys-color-outline, #767588);
+  background-size: 18px 18px;
+  background-position: left 4px center;
+  background-image: radial-gradient(circle at 50% 50%,
+    var(--md-sys-color-outline, #767588) 0 48%, transparent 50%);
+}
+
+.schalter:checked {
+  background-size: 26px 26px;
+  background-position: right 0px center;
+  background-image: radial-gradient(circle at 50% 50%,
+    var(--md-sys-color-on-primary, #ffffff) 0 46%, transparent 48%);
+}
+
+.kuerzel__feld {
+  border-width: 1px;
+  border-color: var(--md-sys-color-outline, #767588);
+  border-radius: var(--radius-klein);
+  background: var(--md-sys-color-surface-container-lowest, #ffffff);
+}
+
+/* --- Dialoge ------------------------------------------------------------- */
+
+.dlg__blatt {
+  background: var(--md-sys-color-surface-container-low, #f3f3fb);
+  border-radius: var(--radius-blatt) var(--radius-blatt) 0 0;
+}
+
+.dlg__kopf { border-bottom: 0; }
+.dlg__fuss { border-top: 0; }
+
+.dlg__griff { background: var(--md-sys-color-outline-variant, #c5c5d9); opacity: 1; }
+
+.ende__pokal { fill: var(--md-sys-color-primary, #1956cd); }
+
+/* --- Breite Schirme ------------------------------------------------------- */
+
+@media (min-width: 1000px) {
+  html { background: var(--md-sys-color-surface-dim, #dad9e1); }
+  body { box-shadow: 0 0 0 1px var(--kante); }
+}

@@ -23,16 +23,18 @@
 <!--
   Die Reihenfolge der Stilblätter ist kein Zufall. basis.css steht zuerst und
   bringt Aufbau, Bauteile und einen vollständigen Satz Standardfarben mit; die
-  drei Skins überschreiben danach nur noch Farben und Kanten. Und der
-  Standard-Skin "mondrian" kommt ZULETZT: schaltet der Schnipsel unten nicht
-  (kein Skript, alter Browser), gewinnt die Kaskade – und dann steht genau der
-  Stil da, der gemeint ist, statt eines beliebigen.
+  Skins überschreiben danach nur noch Farben, Kanten und ein paar Bauteile.
+  Und der Standard-Skin "apple" kommt ZULETZT: schaltet der Schnipsel unten
+  nicht (kein Skript, alter Browser), gewinnt die Kaskade – und dann steht
+  genau der Stil da, der gemeint ist, statt eines beliebigen.
 -->
 <link rel="stylesheet" href="basis.css">
 <link rel="stylesheet" href="m3-farben.css" id="css-m3-farben">
 <link rel="stylesheet" href="m3.css" id="css-m3">
+<link rel="stylesheet" href="m3plus.css" id="css-m3plus">
 <link rel="stylesheet" href="papier.css" id="css-papier">
 <link rel="stylesheet" href="mondrian.css" id="css-mondrian">
+<link rel="stylesheet" href="apple.css" id="css-apple">
 <script>
   /*
     Skin, Farbschema, Sprache und Manifest werden hier gesetzt – vor dem
@@ -42,11 +44,11 @@
     ohne Modul und ohne Abhängigkeit.
   */
   (function () {
-    var einst = { skin: 'mondrian', thema: 'auto' };
+    var einst = { skin: 'apple', thema: 'auto' };
     try { Object.assign(einst, JSON.parse(localStorage.getItem('sk.einst.v1') || '{}')); } catch (e) {}
 
-    var bekannteSkins = { mondrian: 1, papier: 1, m3: 1 };
-    var skin = bekannteSkins[einst.skin] ? einst.skin : 'mondrian';
+    var bekannteSkins = { mondrian: 1, papier: 1, m3: 1, m3plus: 1, apple: 1 };
+    var skin = bekannteSkins[einst.skin] ? einst.skin : 'apple';
     document.documentElement.dataset.skin = skin;
 
     /*
@@ -76,7 +78,10 @@
     document.getElementById('css-mondrian').disabled = skin !== 'mondrian';
     document.getElementById('css-papier').disabled = skin !== 'papier';
     document.getElementById('css-m3').disabled = skin !== 'm3';
-    document.getElementById('css-m3-farben').disabled = skin !== 'm3';
+    document.getElementById('css-m3plus').disabled = skin !== 'm3plus';
+    document.getElementById('css-apple').disabled = skin !== 'apple';
+    // m3-farben.css liefert die Rollenfarben für beide Material-Skins.
+    document.getElementById('css-m3-farben').disabled = skin !== 'm3' && skin !== 'm3plus';
 
     // "auto" setzt gar kein Attribut und folgt damit prefers-color-scheme.
     // Nur eine bewusste Wahl schreibt data-theme – und gewinnt dann in beide
@@ -340,6 +345,14 @@
           <button class="wahl__option" type="button" data-wert="m3">
             <svg class="wahl__haken" aria-hidden="true"><use href="#i-haken"></use></svg>
             <span data-i18n="skin.m3">Material 3</span>
+          </button>
+          <button class="wahl__option" type="button" data-wert="m3plus">
+            <svg class="wahl__haken" aria-hidden="true"><use href="#i-haken"></use></svg>
+            <span data-i18n="skin.m3plus">Material 3+</span>
+          </button>
+          <button class="wahl__option" type="button" data-wert="apple">
+            <svg class="wahl__haken" aria-hidden="true"><use href="#i-haken"></use></svg>
+            <span data-i18n="skin.apple">Apple</span>
           </button>
         </div>
       </section>
