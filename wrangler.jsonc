@@ -33,18 +33,56 @@
   // ASSETS-Bindung an die Dateiauslieferung weiter.
   "main": "worker.js",
 
+  // EINE Datenbank fuer alle Spiele, nicht mehr eine je Spiel.
+  //
+  // D1 zaehlt im Free-Tarif DATENBANKEN und nicht Tabellen; zehn sind das
+  // Limit. Bei etwa einem neuen Spiel alle vier Tage waere dieses Limit in
+  // gut einem Monat erreicht gewesen - und dann haette nicht das naechste
+  // Spiel gefehlt, sondern man haette eines der bestehenden abraeumen
+  // muessen, um Platz zu machen. Tabellen sind dagegen unbegrenzt. Darum
+  // teilen sich die Spiele jetzt die Datenbank "spiele"; jedes neue kostet
+  // nur noch seine eigenen Tabellen.
+  //
+  // Der Preis dafuer steht in den Tabellennamen: sie tragen jetzt alle den
+  // Praefix "shikaku_". Das ist keine Ordnungsliebe, sondern Notwendigkeit
+  // an zwei Stellen. Erstens gab es echte Kollisionen - "zaehler" hiess in
+  // zehner-paare dieselbe Tabelle wie hier, beide mit den Zeilen 'spiele'
+  // und 'siege'; ungetrennt haetten die beiden Spiele einander hochgezaehlt
+  // und beide eine falsche Weltzahl angezeigt. Zweitens sind INDEXNAMEN in
+  // SQLite je DATENBANK eindeutig und nicht je Tabelle - zwei Spiele mit
+  // einem Index "bestzeiten_rangliste" haetten sich beim Anlegen
+  // gegenseitig abgewiesen. Darum tragen auch die Indizes den Praefix.
+  //
+  // Die alte Datenbank "shikaku" bleibt vorerst unberuehrt stehen: sie ist
+  // der Rueckfall, falls am geteilten Bestand etwas nicht stimmt.
   "d1_databases": [
     {
+      // Die BINDUNG heisst weiter DB. Sie ist der Name, unter dem der Worker
+      // die Datenbank sieht (env.DB), und der hat mit ihrem Namen bei
+      // Cloudflare nichts zu tun. Haette man sie mit umbenannt, muesste jede
+      // Stelle in worker.js mit - ohne dass irgendetwas dadurch besser waere.
       "binding": "DB",
-      "database_name": "shikaku",
+      "database_name": "spiele",
       // Kein Geheimnis: die ID benennt die Datenbank nur, sie oeffnet sie
       // nicht. Wer lesen oder schreiben will, braucht ein Token des Kontos -
       // darum steht sie hier im Klartext und nicht in den Secrets.
-      "database_id": "7a818833-d91d-4763-8667-f592e030f839",
+      "database_id": "b82cb4dd-a307-4d2e-adb8-d20c98117ee2",
       // Gehoert IN die Bindung und nicht auf die oberste Ebene: dort meldet
       // wrangler es als unbekanntes Feld und ignoriert es stillschweigend -
       // "wrangler d1 migrations apply" findet dann keine Migrationen und
       // sagt trotzdem, es sei alles in Ordnung.
+      //
+      // Der Ordner bleibt oertlich, die Buchfuehrung darueber nicht: wrangler
+      // merkt sich angewandte Migrationen in EINER Tabelle je DATENBANK
+      // (d1_migrations) und zwar unter ihrem DATEINAMEN. In einer geteilten
+      // Datenbank heisst das, dass zwei Spiele mit je einem "0001_schema.sql"
+      // sich gegenseitig ausloeschen wuerden: das zweite gilt als schon
+      // angewandt und wird STILLSCHWEIGEND uebersprungen, ohne Fehler und
+      // ohne Hinweis. Ein "migrations_table", mit dem sich das je Spiel
+      // trennen liesse, gibt es nicht (nachgesehen: weder in der
+      // Konfiguration noch als Flag). Darum heisst die Datei hier
+      // 0001_shikaku.sql und nicht 0001_schema.sql - der Dateiname ist der
+      // einzige Unterscheider, den wir haben.
       "migrations_dir": "migrations"
     }
   ],

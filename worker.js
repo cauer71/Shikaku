@@ -174,10 +174,10 @@ function fremdeHerkunft(request, url) {
  *
  * Nur ZWEI Anweisungen, und die Rekorde kommen ohne eigene: der Weltrekord
  * einer Stufe ist der KOPF ihrer Bestenliste. Das gilt hier, weil jede Zeile
- * in bestzeiten ein Kuerzel hat (ohne Kuerzel wird nicht geschrieben, siehe
- * partieBeendet) -- in zehner-paare stand daneben noch eine eigene MIN-Abfrage,
- * weil es dort Rekorde aus der Zeit vor den Kuerzeln gab, die in der
- * Bestenliste nicht vorkommen durften. Dieses Loch gibt es hier nicht, und
+ * in shikaku_bestzeiten ein Kuerzel hat (ohne Kuerzel wird nicht geschrieben,
+ * siehe partieBeendet) -- in zehner-paare stand daneben noch eine eigene
+ * MIN-Abfrage, weil es dort Rekorde aus der Zeit vor den Kuerzeln gab, die in
+ * der Bestenliste nicht vorkommen durften. Dieses Loch gibt es hier nicht, und
  * eine Abfrage, deren Antwort man schon hat, ist eine Abfrage zu viel. Sollten
  * je Zeilen ohne Kuerzel in die Tabelle kommen (eine Uebernahme aus einer
  * anderen Quelle etwa), muss die eigene MIN-Abfrage zurueck.
@@ -199,11 +199,11 @@ async function weltstand(db) {
       SELECT stufe, sekunden, kuerzel, fehler, tipps FROM (
         SELECT stufe, sekunden, kuerzel, fehler, tipps,
                ROW_NUMBER() OVER (PARTITION BY stufe ORDER BY sekunden ASC, kuerzel ASC) AS rang
-          FROM bestzeiten
+          FROM shikaku_bestzeiten
          WHERE kuerzel <> ''
       ) WHERE rang <= ?1
       ORDER BY stufe, sekunden ASC, kuerzel ASC`).bind(BESTENLISTE),
-    db.prepare('SELECT name, wert FROM zaehler'),
+    db.prepare('SELECT name, wert FROM shikaku_zaehler'),
   ]);
 
   const stand = { spiele: 0, siege: 0, rekorde: {}, beste: {} };
@@ -243,7 +243,7 @@ async function weltstand(db) {
  * Das ist EIN Satz, und darauf kommt hier alles an: das Lesen der alten Zeit,
  * der Vergleich und das Schreiben passieren in derselben Anweisung, unter
  * derselben Sperre der Datenbank. Das "WHERE excluded.sekunden <
- * bestzeiten.sekunden" gehoert zum UPSERT und nicht davor.
+ * shikaku_bestzeiten.sekunden" gehoert zum UPSERT und nicht davor.
  *
  * Die naheliegende Alternative waere Lesen-Vergleichen-Schreiben:
  *
@@ -268,21 +268,21 @@ async function weltstand(db) {
  */
 function zeitEintragen(db, stufe, sekunden, kuerzel, fehler, tipps) {
   return db.prepare(`
-    INSERT INTO bestzeiten (kuerzel, stufe, sekunden, fehler, tipps, wann)
+    INSERT INTO shikaku_bestzeiten (kuerzel, stufe, sekunden, fehler, tipps, wann)
     VALUES (?1, ?2, ?3, ?4, ?5, ?6)
     ON CONFLICT(kuerzel, stufe) DO UPDATE SET
       sekunden = excluded.sekunden,
       fehler   = excluded.fehler,
       tipps    = excluded.tipps,
       wann     = excluded.wann
-    WHERE excluded.sekunden < bestzeiten.sekunden
+    WHERE excluded.sekunden < shikaku_bestzeiten.sekunden
   `).bind(kuerzel, stufe, sekunden, fehler, tipps, Date.now());
 }
 
 /** Plus eins, und legt den Zaehler beim ersten Mal an. */
 function zaehlerHoch(db, name) {
   return db.prepare(`
-    INSERT INTO zaehler (name, wert) VALUES (?1, 1)
+    INSERT INTO shikaku_zaehler (name, wert) VALUES (?1, 1)
     ON CONFLICT(name) DO UPDATE SET wert = wert + 1
   `).bind(name);
 }

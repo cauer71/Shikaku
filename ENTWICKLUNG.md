@@ -22,7 +22,7 @@ sie die eigentliche Begründung sind.
         └──┬────────┬──────────┬──────────┬───┘
            │        │          │          │
       ┌────▼───┐ ┌──▼─────┐ ┌──▼─────┐ ┌──▼──────┐
-      │brett.js│ │erzeuger│ │loeser  │ │online.js│──▶ worker.js ──▶ D1
+      │brett.js│ │erzeuger│ │loeser  │ │online.js│──▶ worker.js ──▶ D1 „spiele“
       └────────┘ └───┬────┘ └───┬────┘ └─────────┘
        Ansicht +     └────┬──────┘
        Zeiger        ┌────▼─────┐
@@ -212,6 +212,51 @@ lehrreich genug, um sie zu nennen:
   `logischLoesen` und `naechsterZug` mitnahm. Der Weg dorthin ist genau der,
   für den die Prüfung existiert: ein Spielstand aus dem `localStorage` oder
   eine geteilte Adresse.
+
+## Eine Datenbank für alle Spiele
+
+Die Rangliste liegt nicht mehr in einer eigenen Datenbank `shikaku`, sondern
+zusammen mit den anderen Spielen in `spiele`. Der Grund ist eine Zählweise:
+**D1 zählt im Free-Tarif Datenbanken und nicht Tabellen**, zehn sind das Limit
+— und es kommt etwa alle vier Tage ein Spiel dazu. Eine Datenbank je Spiel
+hätte das Limit in gut einem Monat erreicht, und der Preis wäre nicht das
+ausbleibende nächste Spiel gewesen, sondern das Abräumen eines bestehenden.
+Tabellen sind dagegen unbegrenzt.
+
+Die naheliegende Alternative — auf den bezahlten Tarif wechseln — ist
+verworfen, weil sie laufende Kosten für ein Problem aufwirft, das eine
+Umbenennung löst. Die zweite Alternative, die Ranglisten aller Spiele in *eine*
+Tabelle mit einer Spalte `spiel` zu legen, ist verworfen, weil die Spiele
+verschiedene Formen haben: hier entscheidet eine kleine Zeit, in Zehner-Paare
+eine große Punktzahl, und die Spalten sind andere. Eine gemeinsame Tabelle wäre
+entweder halb leer oder voller Sonderfälle gewesen.
+
+Bezahlt wird mit dem Präfix `shikaku_` vor jedem Tabellen- und Indexnamen. Der
+ist an zwei Stellen **nötig** und nicht bloß ordentlich:
+
+- `zaehler` hieß in Zehner-Paare dieselbe Tabelle wie hier, mit denselben
+  Zeilen `spiele` und `siege`. Ungetrennt hätten sich die beiden Spiele
+  gegenseitig hochgezählt, und beide hätten eine falsche Weltzahl angezeigt —
+  ohne dass irgendwo ein Fehler aufgetreten wäre.
+- **Indexnamen sind in SQLite je Datenbank eindeutig, nicht je Tabelle.** Zwei
+  Spiele mit einem Index `bestzeiten_rangliste` hätten sich beim Anlegen
+  gegenseitig abgewiesen. Darum heißt er `shikaku_bestzeiten_rangliste`.
+
+Aus demselben Grund heißt die Migrationsdatei `0001_shikaku.sql` und nicht
+`0001_schema.sql`: wrangler führt in `d1_migrations` je **Datenbank** Buch,
+welche Migration schon lief, und zwar über den **Dateinamen**. Zwei Projekte
+mit je einem `0001_schema.sql` heißt, dass wrangler das zweite für angewandt
+hält und es **stillschweigend überspringt** — kein Fehler, keine Meldung, nur
+fehlende Tabellen. Ein `migrations_table`, mit dem sich das je Projekt trennen
+ließe, gibt es nicht (nachgesehen: weder in der Konfiguration noch als Flag),
+der Dateiname ist also der einzige Unterscheider.
+
+Jede Anweisung in der Migration trägt `IF NOT EXISTS`. Das Schema steht in
+`spiele` bereits; die Datei muss folgenlos durchlaufen können und dieselbe
+Datei muss eine frische Datenbank vollständig anlegen.
+
+Die alte Datenbank `shikaku` bleibt vorerst unberührt stehen — sie ist der
+Rückfall, falls am übernommenen Bestand etwas nicht stimmt.
 
 ## Die Oberfläche
 

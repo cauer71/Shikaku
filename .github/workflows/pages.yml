@@ -45,7 +45,7 @@ jobs:
       # pruefePartie und die Grenzen mit einer nachgebauten D1-Bindung, nicht
       # gegen die echte Datenbank - ein Schreibruf aus dem Ablauf heraus würde
       # die Rangliste mit Testzeilen füllen, und die stehen dann für immer
-      # drin (eine Zeile je Kürzel und Stufe, siehe migrations/0001_schema.sql).
+      # drin (eine Zeile je Kürzel und Stufe, siehe migrations/0001_shikaku.sql).
       - name: Modell, Löser, Erzeuger, Wörterbücher und die Grenze zur Datenbank
         run: npm test
 

@@ -241,10 +241,10 @@ test('eine gemeldete Partie zaehlt mit und traegt die Zeit ein', async () => {
   // Die Antwort ist derselbe Weltstand -- das Spiel braucht keinen zweiten Ruf.
   assert.deepEqual(await antwort.json(), { spiele: 0, siege: 0, rekorde: {}, beste: {} });
 
-  const zeit = schreibtIn(db, 'bestzeiten');
+  const zeit = schreibtIn(db, 'shikaku_bestzeiten');
   assert.equal(zeit.length, 1);
   assert.deepEqual(zeit[0].werte.slice(0, 5), ['CHR', 'mittel', 143, 0, 0]);
-  assert.equal(schreibtIn(db, 'zaehler').length, 2, 'spiele und siege');
+  assert.equal(schreibtIn(db, 'shikaku_zaehler').length, 2, 'spiele und siege');
 });
 
 test('der Vergleich steht im WHERE derselben Anweisung, die einfuegt', async () => {
@@ -255,24 +255,24 @@ test('der Vergleich steht im WHERE derselben Anweisung, die einfuegt', async () 
   // Langsamere zuletzt schreibt, ist die bessere Zeit weg.
   const db = attrappe();
   await worker.fetch(post(gueltig), umgebung(db));
-  const sql = schreibtIn(db, 'bestzeiten')[0].sql.replace(/\s+/g, ' ');
+  const sql = schreibtIn(db, 'shikaku_bestzeiten')[0].sql.replace(/\s+/g, ' ');
   assert.match(sql, /ON CONFLICT\(kuerzel, stufe\) DO UPDATE/);
-  assert.match(sql, /WHERE excluded\.sekunden < bestzeiten\.sekunden/);
+  assert.match(sql, /WHERE excluded\.sekunden < shikaku_bestzeiten\.sekunden/);
 });
 
 test('ohne Kuerzel wird nur gezaehlt, keine Zeile geschrieben', async () => {
   const db = attrappe();
   const antwort = await worker.fetch(post({ ...gueltig, kuerzel: '' }), umgebung(db));
   assert.equal(antwort.status, 200);
-  assert.equal(schreibtIn(db, 'bestzeiten').length, 0);
-  assert.equal(schreibtIn(db, 'zaehler').length, 2);
+  assert.equal(schreibtIn(db, 'shikaku_bestzeiten').length, 0);
+  assert.equal(schreibtIn(db, 'shikaku_zaehler').length, 2);
 });
 
 test('eine Partie, die nicht zaehlt, traegt nichts ein', async () => {
   const db = attrappe();
   await worker.fetch(post({ ...gueltig, zaehlt: false, gewonnen: false }), umgebung(db));
-  assert.equal(schreibtIn(db, 'bestzeiten').length, 0);
-  assert.equal(schreibtIn(db, 'zaehler').length, 1, 'nur die gespielte Partie');
+  assert.equal(schreibtIn(db, 'shikaku_bestzeiten').length, 0);
+  assert.equal(schreibtIn(db, 'shikaku_zaehler').length, 1, 'nur die gespielte Partie');
 });
 
 test('eine unglaubwuerdige Meldung wird abgewiesen, ohne die Datenbank zu beruehren', async () => {
@@ -489,7 +489,7 @@ test('null und Arrays an jeder Stelle sind eine Ablehnung, kein Absturz', () => 
  * Der wichtigste Test dieser Datei, und der einzige, den eine Attrappe nicht
  * leisten kann: WORKER UND CLIENT MUESSEN DIESELBE DATENFORM MEINEN.
  *
- * Hier laeuft das Schema aus migrations/0001_schema.sql durch echtes SQLite,
+ * Hier laeuft das Schema aus migrations/0001_shikaku.sql durch echtes SQLite,
  * der Worker schreibt seine Zeilen mit seinen eigenen Anweisungen, liest den
  * Weltstand mit seinen eigenen Abfragen -- und das Ergebnis geht durch
  * uebernehmen() aus online.js. Ein falscher Spaltenname, ein vertauschter
@@ -500,7 +500,7 @@ test('null und Arrays an jeder Stelle sind eine Ablehnung, kein Absturz', () => 
  */
 function echteDb() {
   const sqlite = new DatabaseSync(':memory:');
-  for (const satz of readFileSync('./migrations/0001_schema.sql', 'utf8').split(';')) {
+  for (const satz of readFileSync('./migrations/0001_shikaku.sql', 'utf8').split(';')) {
     if (satz.trim()) sqlite.exec(`${satz};`);
   }
   // Die kleine Nachbildung der D1-Schnittstelle: prepare/bind/batch, und batch
@@ -524,7 +524,7 @@ function echteDb() {
     prepare: anweisung,
     async batch(liste) { return liste.map((a) => a.lauf()); },
     zeile(kuerzel, stufe) {
-      return sqlite.prepare('SELECT sekunden, fehler, tipps FROM bestzeiten WHERE kuerzel = ? AND stufe = ?')
+      return sqlite.prepare('SELECT sekunden, fehler, tipps FROM shikaku_bestzeiten WHERE kuerzel = ? AND stufe = ?')
         .get(kuerzel, stufe);
     },
   };
@@ -545,12 +545,12 @@ test('das Schema nimmt zehn Zeilen auf und der Weltstand liest sie zurueck', { s
       gewonnen: true, zaehlt: true, neuePartie: true });
     assert.equal(antwort.status, 200, `${stufe} ${sekunden} ${kuerzel}`);
   }
-  assert.equal(db.sqlite.prepare('SELECT COUNT(*) AS n FROM bestzeiten').get().n, 10);
+  assert.equal(db.sqlite.prepare('SELECT COUNT(*) AS n FROM shikaku_bestzeiten').get().n, 10);
 
   const stand = await (await worker.fetch(
     new Request('https://shikaku.auer.page/api/welt'), umgebung(db))).json();
 
-  // Die Zaehler stehen als Zeilen in zaehler und kommen als Zahlen an.
+  // Die Zaehler stehen als Zeilen in shikaku_zaehler und kommen als Zahlen an.
   assert.equal(stand.spiele, 10);
   assert.equal(stand.siege, 10);
 
@@ -594,15 +594,15 @@ test('der UPSERT uebernimmt nur SCHNELLERE Zeiten -- und alles Beiwerk mit', { s
 
   // Gleich schnell aendert auch nichts ('<' und nicht '<='): der erste behaelt
   // seinen Zeitpunkt.
-  const vorher = db.sqlite.prepare('SELECT wann FROM bestzeiten WHERE kuerzel = ? AND stufe = ?').get('CHR', 'mittel').wann;
+  const vorher = db.sqlite.prepare('SELECT wann FROM shikaku_bestzeiten WHERE kuerzel = ? AND stufe = ?').get('CHR', 'mittel').wann;
   await melde(db, { ...gueltig, sekunden: 143, fehler: 7, tipps: 7 });
   assert.deepEqual({ ...db.zeile('CHR', 'mittel') }, { sekunden: 143, fehler: 0, tipps: 0 });
-  assert.equal(db.sqlite.prepare('SELECT wann FROM bestzeiten WHERE kuerzel = ? AND stufe = ?').get('CHR', 'mittel').wann, vorher);
+  assert.equal(db.sqlite.prepare('SELECT wann FROM shikaku_bestzeiten WHERE kuerzel = ? AND stufe = ?').get('CHR', 'mittel').wann, vorher);
 
   // Der Primaerschluessel ist (kuerzel, stufe) und nicht kuerzel allein: eine
   // andere Stufe desselben Spielers ist eine eigene Zeile.
   await melde(db, { ...gueltig, stufe: 'schwer', sekunden: 900 });
-  assert.equal(db.sqlite.prepare('SELECT COUNT(*) AS n FROM bestzeiten WHERE kuerzel = ?').get('CHR').n, 2);
+  assert.equal(db.sqlite.prepare('SELECT COUNT(*) AS n FROM shikaku_bestzeiten WHERE kuerzel = ?').get('CHR').n, 2);
   assert.equal(db.zeile('CHR', 'schwer').sekunden, 900);
 });
 
@@ -612,7 +612,7 @@ test('eine erfundene Stufe in der Tabelle faerbt nicht auf die Antwort ab', { sk
   // '__proto__' wuerde mit stand.beste[b.stufe] den Prototypen der Antwort
   // austauschen statt einen Eintrag anzulegen.
   const db = echteDb();
-  const roh = db.sqlite.prepare('INSERT INTO bestzeiten (kuerzel, stufe, sekunden, fehler, tipps, wann) VALUES (?, ?, ?, 0, 0, 0)');
+  const roh = db.sqlite.prepare('INSERT INTO shikaku_bestzeiten (kuerzel, stufe, sekunden, fehler, tipps, wann) VALUES (?, ?, ?, 0, 0, 0)');
   roh.run('HAX', '__proto__', 1);
   roh.run('HAX', 'erfunden', 2);
   await melde(db, gueltig);
@@ -634,9 +634,9 @@ test('der Index der Rangliste trifft und deckt die Abfrage', { skip: !DatabaseSy
   // im Speicher.
   const db = echteDb();
   const plan = db.sqlite.prepare(
-    "EXPLAIN QUERY PLAN SELECT stufe, sekunden, kuerzel FROM bestzeiten "
+    "EXPLAIN QUERY PLAN SELECT stufe, sekunden, kuerzel FROM shikaku_bestzeiten "
     + "WHERE kuerzel <> '' ORDER BY stufe, sekunden ASC, kuerzel ASC").all()
     .map((z) => z.detail).join(' | ');
-  assert.match(plan, /COVERING INDEX bestzeiten_rangliste/);
+  assert.match(plan, /COVERING INDEX shikaku_bestzeiten_rangliste/);
   assert.doesNotMatch(plan, /TEMP B-TREE/, 'nachtraeglich sortieren muesste es nicht');
 });

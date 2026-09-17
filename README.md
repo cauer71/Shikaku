@@ -141,14 +141,33 @@ Prüfsumme und würde nicht ausgeführt.
 
 ### Gemeinsame Rangliste (D1)
 
-Datenbank `shikaku` (Cloudflare D1, Region Westeuropa), gebunden als `DB`.
+Datenbank `spiele` (Cloudflare D1, Region Westeuropa), gebunden als `DB`.
 
 ```bash
 # Schema anwenden (einmalig)
-npx wrangler d1 migrations apply shikaku --remote
+npx wrangler d1 migrations apply spiele --remote
 ```
 
-Zwei Tabellen, zwei Adressen:
+**Eine Datenbank für alle Spiele, nicht eine je Spiel.** D1 zählt im
+Free-Tarif Datenbanken und nicht Tabellen — zehn sind das Limit, und es kommt
+etwa alle vier Tage ein Spiel dazu. Mit einer Datenbank je Spiel wäre das
+Limit in gut einem Monat erreicht gewesen, und dann hätte nicht das nächste
+Spiel gefehlt, sondern eines der bestehenden hätte weichen müssen. Tabellen
+sind dagegen unbegrenzt.
+
+Bezahlt wird das mit dem Präfix `shikaku_` vor jedem Tabellennamen. Der ist
+keine Ordnungsliebe, sondern an zwei Stellen nötig: `zaehler` hieß in
+Zehner-Paare dieselbe Tabelle wie hier, mit denselben Zeilen `spiele` und
+`siege` — ungetrennt hätten sich die beiden Spiele gegenseitig hochgezählt.
+Und Indexnamen sind in SQLite je **Datenbank** eindeutig und nicht je Tabelle,
+weshalb auch der Index `shikaku_bestzeiten_rangliste` heißt. Aus demselben
+Grund heißt die Migrationsdatei `0001_shikaku.sql` und nicht `0001_schema.sql`:
+wrangler führt in `d1_migrations` je Datenbank Buch, und zwar über den
+**Dateinamen** — zwei Spiele mit je einem `0001_schema.sql` hätten dazu
+geführt, dass das zweite als erledigt gilt und stillschweigend übersprungen
+wird.
+
+Zwei Tabellen (`shikaku_bestzeiten`, `shikaku_zaehler`), zwei Adressen:
 
 ```
 GET  /api/welt      Weltrekord je Stufe, Bestenliste je Stufe, die Zähler
@@ -170,10 +189,10 @@ alle drei Fragen.
 Der Vergleich steht im `WHERE` derselben Anweisung, die einfügt:
 
 ```sql
-INSERT INTO bestzeiten (kuerzel, stufe, sekunden, fehler, tipps, wann)
+INSERT INTO shikaku_bestzeiten (kuerzel, stufe, sekunden, fehler, tipps, wann)
 VALUES (?1, ?2, ?3, ?4, ?5, ?6)
 ON CONFLICT(kuerzel, stufe) DO UPDATE SET …
-WHERE excluded.sekunden < bestzeiten.sekunden
+WHERE excluded.sekunden < shikaku_bestzeiten.sekunden
 ```
 
 Lesen, Vergleichen und Schreiben passieren damit in einem Satz. Zwei Spieler,
@@ -342,7 +361,7 @@ mondrian.css          Skin (Standard)
 papier.css            Skin
 m3.css m3-farben.css  Skin
 sw.js                 Offline-Speicher
-migrations/           D1-Schema
+migrations/           D1-Schema (0001_shikaku.sql)
 tools/                dist/ und shikaku.html bauen, Icons, Manifeste, Prüfwerkzeuge
 *.test.js             Tests zu jedem Modul
 ```

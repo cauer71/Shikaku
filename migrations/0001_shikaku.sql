@@ -1,5 +1,25 @@
 -- Shikaku: die Weltrangliste.
 --
+-- Alle Tabellen tragen den Praefix "shikaku_", weil die Datenbank "spiele"
+-- sich mehrere Spiele teilen. Grund: D1 zaehlt im Free-Tarif DATENBANKEN und
+-- nicht Tabellen, zehn sind das Limit, und es kommt etwa alle vier Tage ein
+-- Spiel dazu. Der Praefix loest dabei zwei ganz konkrete Zusammenstoesse und
+-- ist nicht bloss Ordnung: "zaehler" hiess in zehner-paare dieselbe Tabelle
+-- wie hier, mit denselben Zeilen 'spiele' und 'siege' - ungetrennt haetten
+-- die beiden Spiele einander hochgezaehlt. Und Indexnamen sind in SQLite je
+-- DATENBANK eindeutig und nicht je Tabelle, weshalb auch der Index den
+-- Praefix traegt.
+--
+-- Ebenso traegt die DATEI hier den Spielnamen (0001_shikaku.sql statt
+-- 0001_schema.sql): wrangler fuehrt in d1_migrations je Datenbank Buch,
+-- welche Migration schon lief, und zwar ueber den DATEINAMEN. Zwei Spiele mit
+-- je einem 0001_schema.sql heisst, dass das zweite als erledigt gilt und
+-- stillschweigend uebersprungen wird.
+--
+-- Jede Anweisung hier traegt IF NOT EXISTS. Das Schema steht in "spiele"
+-- bereits, diese Datei muss also folgenlos durchlaufen koennen - und derselbe
+-- Lauf legt sie in einer frischen Datenbank vollstaendig an.
+--
 -- Zwei Tabellen, mehr braucht es nicht. Der Unterschied zu zehner-paare, das
 -- daneben steht, ist die Richtung: dort waren Punkte das Ergebnis und GROSS
 -- war gut, hier ist es eine Zeit und KLEIN ist gut. Das klingt nach einer
@@ -24,12 +44,12 @@
 -- Mit einer Zeile je Kuerzel und Stufe kostet derselbe Angriff nichts weiter
 -- als eine ueberschriebene eigene Zeile.
 
-CREATE TABLE IF NOT EXISTS bestzeiten (
+CREATE TABLE IF NOT EXISTS shikaku_bestzeiten (
   -- Drei Zeichen aus A-Z und 0-9. Hier NICHT leer: eine Zeile ohne Namen
   -- koennte niemand halten, und der Primaerschluessel waere fuer alle
   -- namenlosen Meldungen derselbe -- sie wuerden sich gegenseitig
   -- ueberschreiben und die schnellste anonyme Zeit der Welt bilden. Wer ohne
-  -- Kuerzel spielt, wird darum nur gezaehlt (siehe zaehler) und bekommt hier
+  -- Kuerzel spielt, wird darum nur gezaehlt (siehe shikaku_zaehler) und bekommt
   -- keine Zeile. Der Worker setzt das durch, nicht diese Tabelle: eine
   -- CHECK-Bedingung waere eine zweite Wahrheit an einer zweiten Stelle.
   kuerzel  TEXT    NOT NULL,
@@ -61,12 +81,12 @@ CREATE TABLE IF NOT EXISTS bestzeiten (
 -- Zeitspiel haeufig, und ohne festen Nachrang duerfte die Datenbank zwei
 -- Spieler mit 143 Sekunden bei jedem Laden anders herum ziehen. Die Liste
 -- haette dann bei jedem Aufschlagen ausgesehen wie ein Fehler im Spiel.
-CREATE INDEX IF NOT EXISTS bestzeiten_rangliste ON bestzeiten (stufe, sekunden, kuerzel);
+CREATE INDEX IF NOT EXISTS shikaku_bestzeiten_rangliste ON shikaku_bestzeiten (stufe, sekunden, kuerzel);
 
 -- Gespielte und gewonnene Partien, weltweit -- auch die ohne Kuerzel. Eine
 -- Zeile je Zaehler statt einer Spalte je Zaehler: ein dritter kommt dann ohne
 -- Schemaaenderung dazu, und der Worker kennt nur den Namen.
-CREATE TABLE IF NOT EXISTS zaehler (
+CREATE TABLE IF NOT EXISTS shikaku_zaehler (
   name TEXT PRIMARY KEY,
   wert INTEGER NOT NULL DEFAULT 0
 );
